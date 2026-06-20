@@ -73,7 +73,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     selectAirline.innerHTML = selectAirlineHtml;
 
-    // 4. Render Airport Markers
+    // 4. Major Airports Classification and Rendering
+    const MAJOR_AU_AIRPORTS = new Set([
+        'SYD', 'MEL', 'BNE', 'PER', 'ADL', 'CBR', 'DRW', 'HBA', // Capital Cities
+        'OOL', 'CNS', 'TSV', 'NTL', 'MCY', 'ASP', 'LST', 'BME', // Major regional/tourism hubs
+        'AVV', 'ROK', 'MKY', 'KTA', 'PHE', 'HTI', 'CFS', 'BNK',
+        'ABX', 'MQL', 'KGI', 'ISA', 'DBO', 'WGA', 'TMW', 'PQQ', 'DPO',
+        'XCH', 'INU' // External territories/connections
+    ]);
+
+    function isMajorAirport(code, airport) {
+        if (!airport) return false;
+        if (airport.state === 'INTL') return true;
+        return MAJOR_AU_AIRPORTS.has(code);
+    }
+
+    function updateAirportMarkersVisibility() {
+        if (mobileOptimized) return;
+        
+        const zoom = map.getZoom();
+        Object.keys(airportMarkers).forEach(code => {
+            const marker = airportMarkers[code];
+            const airport = window.AIRPORTS[code];
+            const isMajor = isMajorAirport(code, airport);
+            
+            // Show all airports if zoomed in (zoom >= 6), otherwise show only major ones (or the selected airport)
+            const shouldBeVisible = (zoom >= 6) || isMajor || (code === selectedAirportCode);
+            const isCurrentlyOnMap = map.hasLayer(marker);
+            
+            if (shouldBeVisible && !isCurrentlyOnMap) {
+                marker.addTo(map);
+            } else if (!shouldBeVisible && isCurrentlyOnMap) {
+                map.removeLayer(marker);
+            }
+        });
+    }
+
+    // Update visibility on map zoom
+    map.on('zoomend', updateAirportMarkersVisibility);
+
     Object.values(window.AIRPORTS).forEach(airport => {
         const customIcon = L.divIcon({
             className: `airport-marker`,
@@ -86,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const marker = L.marker([airport.lat, airport.lon], { icon: customIcon })
-            .addTo(map)
             .bindPopup(`<b>${airport.name}</b><br>${airport.city}, ${airport.state}`);
 
         marker.on('click', (e) => {
@@ -96,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         airportMarkers[airport.code] = marker;
     });
+
+    // Run initial zoom visibility filter
+    updateAirportMarkersVisibility();
 
     // 5. Plane Marker Icon Factory
     function createPlaneIcon(heading, color, isSelected) {
@@ -544,6 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const list = getActiveRouteList();
+        updateAirportMarkersVisibility();
         updateDashboard(list);
         drawAirportDestinationConnections();
 
@@ -810,10 +851,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             toggleBtn.classList.remove('active');
             document.body.classList.remove('mobile-optimized');
-            // Restore airport markers
-            Object.keys(airportMarkers).forEach(c => {
-                airportMarkers[c].addTo(map);
-            });
+            // Restore airport markers (respecting zoom visibility constraints)
+            updateAirportMarkersVisibility();
         }
         updateDashboard(getActiveRouteList());
         drawAirportDestinationConnections();
