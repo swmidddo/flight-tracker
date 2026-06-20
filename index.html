@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroTrack Pro | Live Flight Data & Radar Australia</title>
+    
+    <!-- Leaflet CSS for Map Rendering -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom CSS styling -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="logo-area">
+            <span class="radar-pulse">🛰</span>
+            <h1>AEROTRACK <span class="neon-text">PRO</span></h1>
+            <div id="live-indicator" class="live-badge">Live Radar</div>
+        </div>
+
+        <div class="center-tabs">
+            <button id="tab-live" class="tab-btn active">📡 Live feed</button>
+            <button id="tab-sim" class="tab-btn">🤖 Simulated</button>
+        </div>
+
+        <!-- Right Controls Area -->
+        <div class="right-controls">
+            <!-- Theme Toggle Button -->
+            <button id="btn-theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme">🌙</button>
+
+            <!-- Simulation Warp Speed Controller -->
+            <div class="sim-speed-controller" style="display: none;">
+                <span class="control-label">SIM WARP:</span>
+                <div class="btn-group">
+                    <button class="speed-btn" data-speed="1">1x</button>
+                    <button class="speed-btn active" data-speed="10">10x</button>
+                    <button class="speed-btn" data-speed="30">30x</button>
+                    <button class="speed-btn" data-speed="60">60x</button>
+                </div>
+                <button id="btn-trigger-disruption" class="action-btn">⚡ Disruption</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="app-body">
+        
+        <!-- Left Map Area -->
+        <div class="map-viewport">
+            <div id="map"></div>
+
+            <!-- Overlay telemetry cards -->
+            <div class="map-overlay-stats">
+                <div class="overlay-row">
+                    <span class="label">In Air:</span>
+                    <strong id="overlay-airborne-count" class="val text-cyan">0</strong>
+                </div>
+                <div class="overlay-row">
+                    <span class="label">Ground:</span>
+                    <strong id="overlay-ground-count" class="val text-muted">0</strong>
+                </div>
+            </div>
+
+            <!-- Toast Warning Banner -->
+            <div id="warning-banner" class="warning-banner" style="display: none;">
+                <div class="warn-body">
+                    <span class="warn-icon">⚠</span>
+                    <div class="warn-text">
+                        <div id="warn-title" class="warn-head">Thunderstorm Alert</div>
+                        <div id="warn-desc" class="warn-msg">Delays expected across Sydney airspace.</div>
+                    </div>
+                </div>
+                <button id="btn-close-warning" class="close-banner-btn">&times;</button>
+            </div>
+
+            <!-- Detailed Telemetry Slider Drawer -->
+            <div id="telemetry-drawer" class="telemetry-drawer">
+                <div class="drawer-header">
+                    <div class="drawer-brand">
+                        <div id="telemetry-carrier-logo" class="carrier-logo">QF</div>
+                        <div>
+                            <div class="flight-identity">
+                                <span id="telemetry-flight-no">QF401</span>
+                                <span id="telemetry-reg" class="aircraft-reg">VH-VXI</span>
+                            </div>
+                            <div id="telemetry-aircraft-model" class="aircraft-model">Boeing 737-800</div>
+                        </div>
+                    </div>
+                    <button id="btn-close-drawer" class="close-drawer-btn">&times;</button>
+                </div>
+
+                <div class="drawer-content">
+                    <div class="route-banner">
+                        <div class="banner-origin">
+                            <span id="telemetry-origin-code" class="airport-code">SYD</span>
+                            <span id="telemetry-origin-name" class="airport-fullname">Sydney</span>
+                        </div>
+                        <div class="banner-arrow">➔</div>
+                        <div class="banner-destination">
+                            <span id="telemetry-dest-code" class="airport-code">MEL</span>
+                            <span id="telemetry-dest-name" class="airport-fullname">Melbourne</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="progress-wrap">
+                        <div class="progress-labels">
+                            <span id="telemetry-dep-time" class="time">07:00</span>
+                            <span id="telemetry-percent" class="percent">50%</span>
+                            <span id="telemetry-arr-time" class="time">08:35</span>
+                        </div>
+                        <div class="progress-track">
+                            <div id="telemetry-progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Grid metrics -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="card-label">Altitude</span>
+                            <strong id="telemetry-altitude" class="card-val">34,000 ft</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span class="card-label">Speed</span>
+                            <strong id="telemetry-speed" class="card-val">445 kts</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span class="card-label">Heading</span>
+                            <strong id="telemetry-heading" class="card-val">220°</strong>
+                        </div>
+                        <div class="metric-card">
+                            <span class="card-label">Distance</span>
+                            <strong id="telemetry-distance" class="card-val">706 km</strong>
+                        </div>
+                    </div>
+
+                    <div class="status-summary">
+                        <div class="status-col">
+                            <span class="card-label">Flight State</span>
+                            <strong id="telemetry-status-text" class="status-val text-cyan">En Route</strong>
+                        </div>
+                        <div class="status-col">
+                            <span class="card-label">Schedule Info</span>
+                            <strong id="telemetry-delay-text" class="status-val text-emerald">On Time</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar Area -->
+        <div class="dashboard-sidebar">
+            <!-- Counters Row -->
+            <div class="counters-grid">
+                <div class="counter-card" id="filter-active-card">
+                    <span class="val" id="count-active">0</span>
+                    <span class="label">Airborne</span>
+                </div>
+                <div class="counter-card" id="filter-delayed-card">
+                    <span class="val text-amber" id="count-delayed">0</span>
+                    <span class="label">Delayed</span>
+                </div>
+                <div class="counter-card" id="filter-landed-card">
+                    <span class="val text-emerald" id="count-landed">0</span>
+                    <span class="label">Landed</span>
+                </div>
+            </div>
+
+            <!-- Query search & selectors -->
+            <div class="controls-panel">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Search flight #, airline, or airport..." autocomplete="off">
+                    <div id="search-suggestions" class="search-suggestions" style="display: none;"></div>
+                </div>
+
+                <div class="selectors-row">
+                    <select id="select-airline" class="styled-select">
+                        <!-- Loaded dynamically -->
+                    </select>
+
+                    <select id="select-type" class="styled-select">
+                        <option value="all">All Types</option>
+                        <option value="passenger">Passenger</option>
+                        <option value="cargo">Cargo</option>
+                        <option value="private">Private / GA</option>
+                    </select>
+                </div>
+
+                <div class="selectors-row mt-1">
+                    <select id="select-state" class="styled-select">
+                        <option value="all">All States</option>
+                        <option value="New South Wales">NSW</option>
+                        <option value="Victoria">VIC</option>
+                        <option value="Queensland">QLD</option>
+                        <option value="Western Australia">WA</option>
+                        <option value="South Australia">SA</option>
+                        <option value="Tasmania">TAS</option>
+                        <option value="Northern-Territory">NT</option>
+                        <option value="ACT">ACT</option>
+                        <option value="INTL">INTL</option>
+                    </select>
+
+                    <select id="select-status" class="styled-select">
+                        <option value="all">All Statuses</option>
+                        <option value="airborne">Airborne</option>
+                        <option value="delayed">Delayed</option>
+                        <option value="landed">Landed</option>
+                        <option value="scheduled">Scheduled</option>
+                    </select>
+                </div>
+
+                <button id="btn-toggle-intl" class="intl-toggle-btn">
+                    <span>🌏 Hide International</span>
+                </button>
+            </div>
+
+
+
+            <!-- Airport Active Filter Header Banner -->
+            <div id="airport-filter-header" class="airport-filter-header" style="display: none;">
+                <div class="info">
+                    <span class="icon">📍</span>
+                    <span>Filtering departures from <strong id="lbl-airport-code">SYD</strong></span>
+                </div>
+                <button id="btn-clear-airport-filter" class="clear-btn">&times;</button>
+            </div>
+
+            <!-- Table Lists Header -->
+            <div class="board-header">
+                <span>FLIGHT / ROUTE</span>
+                <span>STATE</span>
+            </div>
+
+            <!-- Scrollable Board list -->
+            <div id="flights-board" class="flights-board">
+                <!-- Flight cards injected dynamically -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Leaflet JS Library CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Application modules -->
+    <script src="airports.js"></script>
+    <script src="airlines.js"></script>
+    <script src="simulator.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
