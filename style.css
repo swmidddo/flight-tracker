@@ -529,7 +529,14 @@ body:not(.light-mode) .leaflet-tile {
     color: var(--text-primary);
 }
 
-.intl-toggle-btn {
+.toggles-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.intl-toggle-btn, .optimize-toggle-btn {
     width: 100%;
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid var(--border-glass);
@@ -544,10 +551,9 @@ body:not(.light-mode) .leaflet-tile {
     align-items: center;
     gap: 8px;
     transition: all 0.2s ease;
-    margin-top: 8px;
 }
 
-.intl-toggle-btn:hover {
+.intl-toggle-btn:hover, .optimize-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 255, 255, 0.12);
     color: var(--text-primary);
@@ -558,6 +564,29 @@ body:not(.light-mode) .leaflet-tile {
     border-color: rgba(244, 63, 94, 0.35);
     color: var(--rose);
     box-shadow: 0 0 10px rgba(244, 63, 94, 0.15);
+}
+
+.optimize-toggle-btn.active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: var(--emerald);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+/* Disable expensive animations/shadows in mobile optimization mode */
+body.mobile-optimized * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    backdrop-filter: none !important;
+}
+
+body.mobile-optimized .leaflet-tile {
+    filter: none !important; /* Disable dark mode inversion filter to save mobile GPU power */
+}
+
+body.mobile-optimized .plane-icon-div svg {
+    filter: none !important; /* Disable SVG drop-shadow filter on planes */
 }
 
 /* Predictive Suggestions Dropdown */

@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let stateFilter = 'all';
     let typeFilter = 'all';
     let hideInternational = false;
+    let mobileOptimized = false;
 
     let liveFlights = [];
     let userFlights = [];
@@ -263,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw dashed line: if origin OR dest is available, draw from startLoc to endLoc.
         // If origin is missing, draw from currentLoc to destination.
         // If destination is missing, draw from origin to currentLoc.
-        if (hasOrigin || hasDest) {
+        if ((hasOrigin || hasDest) && !mobileOptimized) {
             const startLoc = hasOrigin ? [flight.origin.lat, flight.origin.lon] : currentLoc;
             const endLoc = hasDest ? [flight.dest.lat, flight.dest.lon] : currentLoc;
 
@@ -549,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
         airportConnectionLines.forEach(line => map.removeLayer(line));
         airportConnectionLines = [];
 
-        if (!selectedAirportCode) return;
+        if (!selectedAirportCode || mobileOptimized) return;
 
         const ap = window.AIRPORTS[selectedAirportCode];
         if (!ap) return;
@@ -776,12 +777,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const toggleBtn = document.getElementById('btn-toggle-intl');
         if (hideInternational) {
             toggleBtn.classList.add('active');
-            toggleBtn.innerHTML = '<span>🌏 Show International</span>';
+            toggleBtn.innerHTML = '<span>🌏 Show Intl</span>';
         } else {
             toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = '<span>🌏 Hide International</span>';
+            toggleBtn.innerHTML = '<span>🌏 Hide Intl</span>';
         }
         updateDashboard(getActiveRouteList());
+    });
+
+    document.getElementById('btn-toggle-optimize').addEventListener('click', () => {
+        mobileOptimized = !mobileOptimized;
+        const toggleBtn = document.getElementById('btn-toggle-optimize');
+        if (mobileOptimized) {
+            toggleBtn.classList.add('active');
+            document.body.classList.add('mobile-optimized');
+            // Performance: remove heavy SVG airport markers from mobile map view
+            Object.keys(airportMarkers).forEach(c => {
+                map.removeLayer(airportMarkers[c]);
+            });
+        } else {
+            toggleBtn.classList.remove('active');
+            document.body.classList.remove('mobile-optimized');
+            // Restore airport markers
+            Object.keys(airportMarkers).forEach(c => {
+                airportMarkers[c].addTo(map);
+            });
+        }
+        updateDashboard(getActiveRouteList());
+        drawAirportDestinationConnections();
     });
 
     // 13. Simulator Controls & Warnings
