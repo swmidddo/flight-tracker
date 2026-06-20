@@ -87,13 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileOptimized) return;
         
         const zoom = map.getZoom();
+        // Dynamic zoom threshold: on mobile (screens <= 900px), show all airports at zoom >= 6.
+        // On desktop/PC, show all airports at zoom >= 7 (since wider displays show a much larger region at lower zoom levels).
+        const threshold = (window.innerWidth <= 900) ? 6 : 7;
+        
         Object.keys(airportMarkers).forEach(code => {
             const marker = airportMarkers[code];
             const airport = window.AIRPORTS[code];
             const isMajor = isMajorAirport(code, airport);
             
-            // Show all airports if zoomed in (zoom >= 6), otherwise show only major ones (or the selected airport)
-            const shouldBeVisible = (zoom >= 6) || isMajor || (code === selectedAirportCode);
+            // Show all airports if zoomed in past threshold, otherwise show only capital city ones (or the selected airport)
+            const shouldBeVisible = (zoom >= threshold) || isMajor || (code === selectedAirportCode);
             const isCurrentlyOnMap = map.hasLayer(marker);
             
             if (shouldBeVisible && !isCurrentlyOnMap) {
