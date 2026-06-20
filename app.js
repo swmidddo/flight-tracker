@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }).addTo(map);
 
     // 2. Global State Variables
-    let currentMode = 'live'; // 'live' or 'sim'
     let selectedFlightId = null;
     let selectedAirportCode = null;
     let searchFilter = '';
@@ -518,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getActiveRouteList() {
-        return currentMode === 'sim' ? simulator.flights : [...userFlights, ...liveFlights];
+        return [...userFlights, ...liveFlights];
     }
 
     // 10. Selection Orchestrator
@@ -857,28 +856,8 @@ document.addEventListener('DOMContentLoaded', () => {
         drawAirportDestinationConnections();
     });
 
-    // 13. Simulator Controls & Warnings
-    const speedBtns = document.querySelectorAll('.speed-btn');
-    speedBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            speedBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            simulator.setSimSpeed(parseInt(btn.dataset.speed));
-        });
-    });
-
-    const disruptionBtn = document.getElementById('btn-trigger-disruption');
+    // 13. System Warnings & Theme Toggles
     const warningBanner = document.getElementById('warning-banner');
-    
-    disruptionBtn.addEventListener('click', () => {
-        const alertData = simulator.triggerRandomEvent();
-        document.getElementById('warn-title').textContent = alertData.title;
-        document.getElementById('warn-desc').textContent = alertData.desc;
-        warningBanner.style.display = 'flex';
-
-        setTimeout(() => { warningBanner.style.display = 'none'; }, 8000);
-    });
-
     document.getElementById('btn-close-warning').addEventListener('click', () => {
         warningBanner.style.display = 'none';
     });
@@ -889,40 +868,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLight = document.body.classList.toggle('light-mode');
         themeBtn.textContent = isLight ? '☀️' : '🌙';
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
-    });
-
-    // Mode Tabs
-    const tabLive = document.getElementById('tab-live');
-    const tabSim = document.getElementById('tab-sim');
-    const simControllerBar = document.querySelector('.sim-speed-controller');
-
-    tabLive.addEventListener('click', () => {
-        if (currentMode === 'live') return;
-        currentMode = 'live';
-        tabLive.classList.add('active');
-        tabSim.classList.remove('active');
-        simControllerBar.style.display = 'none';
-
-        const indicator = document.getElementById('live-indicator');
-        indicator.className = "live-badge";
-        indicator.textContent = "Live Radar";
-
-        lastLiveFetch = 0;
-        fetchLiveFlights();
-    });
-
-    tabSim.addEventListener('click', () => {
-        if (currentMode === 'sim') return;
-        currentMode = 'sim';
-        tabSim.classList.add('active');
-        tabLive.classList.remove('active');
-        simControllerBar.style.display = 'flex';
-
-        const indicator = document.getElementById('live-indicator');
-        indicator.className = "live-badge sim-badge";
-        indicator.textContent = "Simulation";
-
-        simulator.tick();
     });
 
     // 14. Live Radar Network requests
@@ -1099,12 +1044,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function activateSimulationFallback(errMessage) {
-        console.warn(`Connection to live feed server lost. Activating local simulator fallback. Reason: ${errMessage}`);
+        console.warn(`Connection to live feed server lost. Reason: ${errMessage}`);
         const indicator = document.getElementById('live-indicator');
-        indicator.className = "live-badge sim-badge";
-        indicator.textContent = "Simulated Fallback";
-        currentMode = 'sim'; // Switch mode state to simulated flights pool!
-        simulator.tick();
+        indicator.className = "live-badge";
+        indicator.style.borderColor = "var(--rose)";
+        indicator.style.color = "var(--rose)";
+        indicator.style.background = "rgba(244, 63, 94, 0.1)";
+        indicator.textContent = "Offline / Retrying";
+
+        const warningBanner = document.getElementById('warning-banner');
+        if (warningBanner) {
+            document.getElementById('warn-title').textContent = "Network Interruption";
+            document.getElementById('warn-desc').textContent = "Live flight data feed offline. Retrying connections...";
+            warningBanner.style.display = 'flex';
+        }
     }
 
     function fetchLiveFlights() {
@@ -1151,6 +1104,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const indicator = document.getElementById('live-indicator');
         indicator.className = "live-badge";
+        indicator.style.borderColor = "";
+        indicator.style.color = "";
+        indicator.style.background = "";
         indicator.textContent = "Live Radar";
 
         // Accumulate history for live flights from the previous liveFlights array
@@ -1185,24 +1141,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 15. Setup Event Intervals
     setInterval(() => {
-        if (currentMode === 'sim') {
-            simulator.tick();
+        const now = Date.now();
+        if (now - lastLiveFetch >= 10000) {
+            fetchLiveFlights();
         } else {
-            const now = Date.now();
-            if (now - lastLiveFetch >= 10000) {
-                fetchLiveFlights();
-            } else {
-                tickUserFlights();
-                updateDashboard([...userFlights, ...liveFlights]);
-            }
+            tickUserFlights();
+            updateDashboard([...userFlights, ...liveFlights]);
         }
     }, 1000);
-
-    simulator.onFlightUpdate = (flights) => {
-        if (currentMode === 'sim') {
-            updateDashboard(flights);
-        }
-    };
 
     // 16. Mobile Sidebar Toggle listeners
     const sidebar = document.querySelector('.dashboard-sidebar');
