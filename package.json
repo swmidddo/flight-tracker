@@ -1,0 +1,10 @@
+{
+  "name": "australian-flight-tracker-v2",
+  "version": "1.0.0",
+  "description": "Premium Live Flight Tracker for Australian Airspace",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
