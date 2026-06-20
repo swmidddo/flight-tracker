@@ -991,7 +991,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const speedKmh = (fArr[5] || 400) * 1.852;
                 const remainingDist = simulator.getGreatCircleDistance(lat, lon, dest.lat, dest.lon);
                 const remainingMs = speedKmh > 50 ? (remainingDist / speedKmh) * 3600 * 1000 : 30 * 60 * 1000;
-                departureTime = new Date(now - (progress * remainingMs));
+                const elapsedMs = remainingMs * (progress / (1 - progress));
+                departureTime = new Date(now - elapsedMs);
                 arrivalTime = new Date(now + remainingMs);
             }
 

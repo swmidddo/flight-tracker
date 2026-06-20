@@ -191,8 +191,9 @@ function parseFlightRadar24Data(raw) {
             const speedKmh = speedKts * 1.852;
             const remainingDist = getDistance(lat, lon, dest.lat, dest.lon);
             const remainingMs = speedKmh > 50 ? (remainingDist / speedKmh) * 3600 * 1000 : 30 * 60 * 1000;
+            const elapsedMs = remainingMs * (progress / (1 - progress));
             
-            departureTime = new Date(now - (progress * remainingMs));
+            departureTime = new Date(now - elapsedMs);
             arrivalTime = new Date(now + remainingMs);
         }
 
