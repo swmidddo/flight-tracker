@@ -897,7 +897,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     weatherRadarLayer = L.tileLayer(tileUrl, {
                         attribution: 'Radar data &copy; <a href="https://www.rainviewer.com/">RainViewer</a>',
                         opacity: 0.55,
-                        zIndex: 100
+                        zIndex: 100,
+                        maxNativeZoom: 7
                     }).addTo(map);
                 })
                 .catch(err => {
