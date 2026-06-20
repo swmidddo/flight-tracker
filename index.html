@@ -13,37 +13,7 @@
 </head>
 <body>
 
-    <!-- Header Section -->
-    <header>
-        <div class="logo-area">
-            <span class="radar-pulse">🛰</span>
-            <h1>AEROTRACK <span class="neon-text">PRO</span></h1>
-            <div id="live-indicator" class="live-badge">Live Radar</div>
-        </div>
 
-        <div class="center-tabs">
-            <button id="tab-live" class="tab-btn active">📡 Live feed</button>
-            <button id="tab-sim" class="tab-btn">🤖 Simulated</button>
-        </div>
-
-        <!-- Right Controls Area -->
-        <div class="right-controls">
-            <!-- Theme Toggle Button -->
-            <button id="btn-theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme">🌙</button>
-
-            <!-- Simulation Warp Speed Controller -->
-            <div class="sim-speed-controller" style="display: none;">
-                <span class="control-label">SIM WARP:</span>
-                <div class="btn-group">
-                    <button class="speed-btn" data-speed="1">1x</button>
-                    <button class="speed-btn active" data-speed="10">10x</button>
-                    <button class="speed-btn" data-speed="30">30x</button>
-                    <button class="speed-btn" data-speed="60">60x</button>
-                </div>
-                <button id="btn-trigger-disruption" class="action-btn">⚡ Disruption</button>
-            </div>
-        </div>
-    </header>
 
     <!-- Main Container -->
     <div class="app-body">
@@ -156,6 +126,35 @@
 
         <!-- Right Sidebar Area -->
         <div class="dashboard-sidebar">
+            <!-- Sidebar Header Panel -->
+            <div class="sidebar-header-panel">
+                <div class="logo-area">
+                    <span class="radar-pulse">🛰</span>
+                    <h2>AEROTRACK <span class="neon-text">PRO</span></h2>
+                    <div id="live-indicator" class="live-badge">Live Radar</div>
+                </div>
+                <button id="btn-theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme">🌙</button>
+            </div>
+            
+            <div class="sidebar-mode-panel">
+                <div class="center-tabs">
+                    <button id="tab-live" class="tab-btn active">📡 Live feed</button>
+                    <button id="tab-sim" class="tab-btn">🤖 Simulated</button>
+                </div>
+                
+                <!-- Simulation Warp Speed Controller -->
+                <div class="sim-speed-controller" style="display: none;">
+                    <span class="control-label">WARP:</span>
+                    <div class="btn-group">
+                        <button class="speed-btn" data-speed="1">1x</button>
+                        <button class="speed-btn active" data-speed="10">10x</button>
+                        <button class="speed-btn" data-speed="30">30x</button>
+                        <button class="speed-btn" data-speed="60">60x</button>
+                    </div>
+                    <button id="btn-trigger-disruption" class="action-btn">⚡ Disruption</button>
+                </div>
+            </div>
+
             <!-- Counters Row -->
             <div class="counters-grid">
                 <div class="counter-card" id="filter-active-card">

@@ -13,8 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (themeBtn) themeBtn.textContent = '☀️';
     }
 
-    const darkTileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    const lightTileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    const googleTileUrl = 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
 
     // 2. Map Initialization
     const map = L.map('map', {
@@ -27,10 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Top right zoom controls
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Premium Map tiles
-    const baseTileLayer = L.tileLayer(isLightInitial ? lightTileUrl : darkTileUrl, {
-        maxZoom: 18,
-        minZoom: 3
+    // Google Maps base tiles
+    const baseTileLayer = L.tileLayer(googleTileUrl, {
+        maxZoom: 20,
+        minZoom: 3,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: '&copy; Google Maps'
     }).addTo(map);
 
     // 2. Global State Variables
@@ -814,7 +815,6 @@ document.addEventListener('DOMContentLoaded', () => {
     themeBtn.addEventListener('click', () => {
         const isLight = document.body.classList.toggle('light-mode');
         themeBtn.textContent = isLight ? '☀️' : '🌙';
-        baseTileLayer.setUrl(isLight ? lightTileUrl : darkTileUrl);
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
     });
 

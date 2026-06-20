@@ -335,8 +335,16 @@ h1 {
     background-color: #030508;
 }
 
+/* Google Maps Dark Mode Filter */
+body:not(.light-mode) .leaflet-tile {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
 /* Sidebar */
 .dashboard-sidebar {
+    position: absolute;
+    right: 0;
+    top: 0;
     width: 440px;
     height: 100%;
     background: var(--bg-glass);
@@ -345,8 +353,58 @@ h1 {
     box-shadow: -10px 0 40px rgba(0,0,0,0.65);
     display: flex;
     flex-direction: column;
-    z-index: 10;
+    z-index: 1050; /* Ensure it overlays Leaflet controls (z-index 1000) */
+    transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dashboard-sidebar.sidebar-open {
+    transform: translateX(0);
+}
+
+/* Sidebar Header Panel */
+.sidebar-header-panel {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-glass);
+    background: var(--bg-tint-subtle);
+}
+
+.sidebar-header-panel .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-header-panel h2 {
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Sidebar Mode Panel */
+.sidebar-mode-panel {
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.sidebar-mode-panel .center-tabs {
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    padding: 3px;
+    border-radius: 30px;
+}
+
+.sidebar-mode-panel .tab-btn {
+    flex: 1;
+    text-align: center;
 }
 
 /* Counters Row */
@@ -1162,7 +1220,7 @@ h1 {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    display: none; /* Hidden on desktop */
+    display: flex; /* Always visible */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1177,11 +1235,11 @@ h1 {
     border-color: var(--cyan);
 }
 
+.sidebar-toggle-btn.sidebar-open {
+    right: calc(440px + 12px); /* Slides with the sidebar drawer on desktop */
+}
+
 @media (max-width: 900px) {
-    .sidebar-toggle-btn {
-        display: flex;
-    }
-    
     .sidebar-toggle-btn.sidebar-open {
         right: calc(min(400px, 85%) + 12px);
     }
