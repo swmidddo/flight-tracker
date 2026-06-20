@@ -1154,7 +1154,7 @@ h1 {
     position: absolute;
     right: 12px;
     top: 90px;
-    z-index: 1010; /* Higher than sidebar drawer which is 10 */
+    z-index: 1060; /* Higher than sidebar drawer which is 1050 */
     background: var(--bg-glass);
     backdrop-filter: blur(12px);
     border: 1px solid var(--border-glass);
@@ -1194,6 +1194,7 @@ h1 {
         width: min(400px, 85%);
         transform: translateX(100%);
         border-left: 1px solid var(--border-glass);
+        z-index: 1050; /* Ensure it overlays Leaflet controls (z-index 1000) */
     }
     
     .dashboard-sidebar.sidebar-open {
