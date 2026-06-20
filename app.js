@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (themeBtn) themeBtn.textContent = '☀️';
     }
 
-    const googleTileUrl = 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+    const googleTileUrl = 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en';
 
     // 2. Map Initialization
     const map = L.map('map', {
