@@ -444,7 +444,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('telemetry-altitude').textContent = flight.status === 'Landed' ? '0 ft' : `${flight.currentAlt.toLocaleString()} ft`;
         document.getElementById('telemetry-speed').textContent = flight.status === 'Landed' ? '0 kts' : `${flight.currentSpeed} kts`;
         document.getElementById('telemetry-heading').textContent = `${Math.round(flight.currentHeading)}°`;
-        document.getElementById('telemetry-distance').textContent = `${flight.distanceKm} km`;
+        let distanceText = '--';
+        if (flight.status === 'Landed') {
+            distanceText = '0 km';
+        } else if (flight.dest && flight.dest.lat !== null && flight.dest.lon !== null) {
+            const distLeft = Math.round(simulator.getGreatCircleDistance(
+                flight.currentLat,
+                flight.currentLon,
+                flight.dest.lat,
+                flight.dest.lon
+            ));
+            distanceText = `${distLeft.toLocaleString()} km`;
+        }
+        document.getElementById('telemetry-distance').textContent = distanceText;
 
         const statusEl = document.getElementById('telemetry-status-text');
         statusEl.textContent = flight.status;

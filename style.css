@@ -938,22 +938,34 @@ body.mobile-optimized .plane-icon-div svg {
 /* Detailed Telemetry Slider Drawer */
 .telemetry-drawer {
     position: absolute;
-    bottom: -320px;
+    bottom: 20px;
     left: 20px;
     right: 20px;
     background: var(--bg-glass);
     backdrop-filter: blur(24px);
     border: 1px solid var(--border-glass);
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
+    border-radius: 16px;
     padding: 20px 24px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
     z-index: 900;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-    transition: bottom 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100% - 110px);
+    
+    /* Hardware-accelerated slide up transition */
+    transform: translateY(calc(100% + 40px));
+    transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .telemetry-drawer.active {
-    bottom: 0;
+    transform: translateY(0);
+}
+
+.drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .drawer-header {
@@ -1344,6 +1356,16 @@ body.mobile-optimized .plane-icon-div svg {
     
     .card-val {
         font-size: 0.85rem;
+    }
+    
+    .telemetry-drawer {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 16px 16px 0 0;
+        padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+        max-height: calc(100% - 90px);
+        transform: translateY(calc(100% + 20px));
     }
 }
 
