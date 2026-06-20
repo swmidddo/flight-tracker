@@ -489,6 +489,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         updateDashboard(list);
+
+        if (window.innerWidth <= 900 && id) {
+            const sidebar = document.querySelector('.dashboard-sidebar');
+            const toggleBtn = document.getElementById('btn-sidebar-toggle');
+            if (sidebar && toggleBtn) {
+                sidebar.classList.remove('sidebar-open');
+                toggleBtn.classList.remove('sidebar-open');
+                toggleBtn.innerHTML = '📋';
+            }
+        }
     }
 
     function selectAirport(code) {
@@ -522,6 +532,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = getActiveRouteList();
         updateDashboard(list);
         drawAirportDestinationConnections();
+
+        if (window.innerWidth <= 900 && code) {
+            const sidebar = document.querySelector('.dashboard-sidebar');
+            const toggleBtn = document.getElementById('btn-sidebar-toggle');
+            if (sidebar && toggleBtn) {
+                sidebar.classList.remove('sidebar-open');
+                toggleBtn.classList.remove('sidebar-open');
+                toggleBtn.innerHTML = '📋';
+            }
+        }
     }
 
     function drawAirportDestinationConnections() {
@@ -1110,6 +1130,30 @@ document.addEventListener('DOMContentLoaded', () => {
             updateDashboard(flights);
         }
     };
+
+    // 16. Mobile Sidebar Toggle listeners
+    const sidebar = document.querySelector('.dashboard-sidebar');
+    const sidebarToggleBtn = document.getElementById('btn-sidebar-toggle');
+
+    if (sidebarToggleBtn && sidebar) {
+        sidebarToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = sidebar.classList.toggle('sidebar-open');
+            sidebarToggleBtn.classList.toggle('sidebar-open');
+            sidebarToggleBtn.innerHTML = isOpen ? '✕' : '📋';
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 900 && sidebar.classList.contains('sidebar-open')) {
+                if (!e.target.closest('.dashboard-sidebar') && !e.target.closest('#btn-sidebar-toggle')) {
+                    sidebar.classList.remove('sidebar-open');
+                    sidebarToggleBtn.classList.remove('sidebar-open');
+                    sidebarToggleBtn.innerHTML = '📋';
+                }
+            }
+        });
+    }
 
     fetchLiveFlights();
 });
