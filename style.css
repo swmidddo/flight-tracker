@@ -578,6 +578,36 @@ body:not(.light-mode) .leaflet-tile {
     box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
 }
 
+.weather-toggle-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.weather-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+}
+
+.weather-toggle-btn.active {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+    color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
 /* Disable expensive animations/shadows in mobile optimization mode */
 body.mobile-optimized * {
     box-shadow: none !important;

@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let typeFilter = 'all';
     let hideInternational = false;
     let mobileOptimized = false;
+    let weatherRadarLayer = null;
 
     let liveFlights = [];
     let userFlights = [];
@@ -854,6 +855,64 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateDashboard(getActiveRouteList());
         drawAirportDestinationConnections();
+    });
+
+    document.getElementById('btn-toggle-weather').addEventListener('click', () => {
+        const toggleBtn = document.getElementById('btn-toggle-weather');
+        if (weatherRadarLayer) {
+            map.removeLayer(weatherRadarLayer);
+            weatherRadarLayer = null;
+            toggleBtn.classList.remove('active');
+        } else {
+            toggleBtn.classList.add('active');
+            fetch('https://api.rainviewer.com/public/weather-maps.json')
+                .then(res => {
+                    if (!res.ok) throw new Error('RainViewer API error');
+                    return res.json();
+                })
+                .then(data => {
+                    if (!toggleBtn.classList.contains('active')) {
+                        // User disabled it while fetching
+                        return;
+                    }
+                    let latestFrame = null;
+                    if (data.radar && data.radar.nowcast && data.radar.nowcast.length > 0) {
+                        latestFrame = data.radar.nowcast[0].path;
+                    } else if (data.radar && data.radar.past && data.radar.past.length > 0) {
+                        latestFrame = data.radar.past[data.radar.past.length - 1].path;
+                    }
+                    
+                    if (!latestFrame) {
+                        console.error('No radar frame path found in RainViewer API response');
+                        toggleBtn.classList.remove('active');
+                        return;
+                    }
+
+                    const tileUrl = `https://tilecache.rainviewer.com${latestFrame}/256/{z}/{x}/{y}/2/1_1.png`;
+                    
+                    if (weatherRadarLayer) {
+                        map.removeLayer(weatherRadarLayer);
+                    }
+                    
+                    weatherRadarLayer = L.tileLayer(tileUrl, {
+                        attribution: 'Radar data &copy; <a href="https://www.rainviewer.com/">RainViewer</a>',
+                        opacity: 0.55,
+                        zIndex: 100
+                    }).addTo(map);
+                })
+                .catch(err => {
+                    console.error('Failed to load weather radar:', err);
+                    toggleBtn.classList.remove('active');
+                    
+                    // Show warning banner
+                    const warningBanner = document.getElementById('warning-banner');
+                    if (warningBanner) {
+                        document.getElementById('warn-title').textContent = "Weather Feed Error";
+                        document.getElementById('warn-desc').textContent = "Unable to fetch live weather radar data. Please retry.";
+                        warningBanner.style.display = 'flex';
+                    }
+                });
+        }
     });
 
     // 13. System Warnings & Theme Toggles
