@@ -75,16 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Major Airports Classification and Rendering
     const MAJOR_AU_AIRPORTS = new Set([
-        'SYD', 'MEL', 'BNE', 'PER', 'ADL', 'CBR', 'DRW', 'HBA', // Capital Cities
-        'OOL', 'CNS', 'TSV', 'NTL', 'MCY', 'ASP', 'LST', 'BME', // Major regional/tourism hubs
-        'AVV', 'ROK', 'MKY', 'KTA', 'PHE', 'HTI', 'CFS', 'BNK',
-        'ABX', 'MQL', 'KGI', 'ISA', 'DBO', 'WGA', 'TMW', 'PQQ', 'DPO',
-        'XCH', 'INU' // External territories/connections
+        'SYD', 'MEL', 'BNE', 'PER', 'ADL', 'CBR', 'DRW', 'HBA' // Capital Cities
     ]);
 
     function isMajorAirport(code, airport) {
         if (!airport) return false;
-        if (airport.state === 'INTL') return true;
         return MAJOR_AU_AIRPORTS.has(code);
     }
 
