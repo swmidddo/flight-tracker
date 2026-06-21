@@ -37,13 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Global State Variables
     let selectedFlightId = null;
     let selectedAirportCode = null;
-    let searchFilter = '';
-    let airlineFilter = 'all';
-    let statusFilter = 'all';
-    let stateFilter = 'all';
-    let typeFilter = 'all';
-    let hideInternational = false;
-    let mobileOptimized = false;
+
+    // Load persisted preferences
+    let searchFilter = localStorage.getItem('pref_searchFilter') || '';
+    let airlineFilter = localStorage.getItem('pref_airlineFilter') || 'all';
+    let statusFilter = localStorage.getItem('pref_statusFilter') || 'all';
+    let stateFilter = localStorage.getItem('pref_stateFilter') || 'all';
+    let typeFilter = localStorage.getItem('pref_typeFilter') || 'all';
+    let hideInternational = localStorage.getItem('pref_hideInternational') === 'true';
+    let mobileOptimized = localStorage.getItem('pref_mobileOptimized') === 'true';
+    let weatherRadarActive = localStorage.getItem('pref_weatherRadarActive') === 'true';
     let weatherRadarLayer = null;
 
     let liveFlights = [];
@@ -649,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchInput.addEventListener('input', (e) => {
         searchFilter = e.target.value;
+        savePreferences();
         updateDashboard(getActiveRouteList());
         renderSearchSuggestions();
     });
@@ -763,6 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateSidebar(getActiveRouteList());
                 }
 
+                savePreferences();
                 suggestionsDiv.style.display = 'none';
                 suggestionsDiv.innerHTML = '';
             });
@@ -771,21 +776,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectAirline.addEventListener('change', (e) => {
          airlineFilter = e.target.value;
+         savePreferences();
          updateDashboard(getActiveRouteList());
      });
  
      selectType.addEventListener('change', (e) => {
          typeFilter = e.target.value;
+         savePreferences();
          updateDashboard(getActiveRouteList());
      });
  
      selectState.addEventListener('change', (e) => {
          stateFilter = e.target.value;
+         savePreferences();
          updateDashboard(getActiveRouteList());
      });
 
     selectStatus.addEventListener('change', (e) => {
         statusFilter = e.target.value;
+        savePreferences();
         updateDashboard(getActiveRouteList());
     });
 
@@ -804,65 +813,28 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (statusFilter === 'landed' && landedCard) landedCard.classList.add('active-filter');
     }
 
-    function toggleBadgeFilter(target) {
-        statusFilter = statusFilter === target ? 'all' : target;
-        selectStatus.value = statusFilter;
-        updateDashboard(getActiveRouteList());
+    function savePreferences() {
+        localStorage.setItem('pref_searchFilter', searchFilter);
+        localStorage.setItem('pref_airlineFilter', airlineFilter);
+        localStorage.setItem('pref_statusFilter', statusFilter);
+        localStorage.setItem('pref_stateFilter', stateFilter);
+        localStorage.setItem('pref_typeFilter', typeFilter);
+        localStorage.setItem('pref_hideInternational', hideInternational);
+        localStorage.setItem('pref_mobileOptimized', mobileOptimized);
+        localStorage.setItem('pref_weatherRadarActive', weatherRadarLayer !== null);
     }
 
-    document.getElementById('filter-active-card').addEventListener('click', () => toggleBadgeFilter('airborne'));
-    document.getElementById('filter-delayed-card').addEventListener('click', () => toggleBadgeFilter('delayed'));
-    document.getElementById('filter-landed-card').addEventListener('click', () => toggleBadgeFilter('landed'));
-
-    document.getElementById('btn-close-drawer').addEventListener('click', () => {
-        selectedFlightId = null;
-        updateDashboard(getActiveRouteList());
-    });
-
-    document.getElementById('btn-clear-airport-filter').addEventListener('click', () => {
-        selectedAirportCode = null;
-        selectAirport(null);
-    });
-
-    document.getElementById('btn-toggle-intl').addEventListener('click', () => {
-        hideInternational = !hideInternational;
-        const toggleBtn = document.getElementById('btn-toggle-intl');
-        if (hideInternational) {
-            toggleBtn.classList.add('active');
-            toggleBtn.innerHTML = '<span>🌏 Show Intl</span>';
-        } else {
-            toggleBtn.classList.remove('active');
-            toggleBtn.innerHTML = '<span>🌏 Hide Intl</span>';
-        }
-        updateDashboard(getActiveRouteList());
-    });
-
-    document.getElementById('btn-toggle-optimize').addEventListener('click', () => {
-        mobileOptimized = !mobileOptimized;
-        const toggleBtn = document.getElementById('btn-toggle-optimize');
-        if (mobileOptimized) {
-            toggleBtn.classList.add('active');
-            document.body.classList.add('mobile-optimized');
-            // Performance: remove heavy SVG airport markers from mobile map view
-            Object.keys(airportMarkers).forEach(c => {
-                map.removeLayer(airportMarkers[c]);
-            });
-        } else {
-            toggleBtn.classList.remove('active');
-            document.body.classList.remove('mobile-optimized');
-            // Restore airport markers (respecting zoom visibility constraints)
-            updateAirportMarkersVisibility();
-        }
-        updateDashboard(getActiveRouteList());
-        drawAirportDestinationConnections();
-    });
-
-    document.getElementById('btn-toggle-weather').addEventListener('click', () => {
+    function setWeatherRadarState(active) {
         const toggleBtn = document.getElementById('btn-toggle-weather');
-        if (weatherRadarLayer) {
-            map.removeLayer(weatherRadarLayer);
-            weatherRadarLayer = null;
+        if (!toggleBtn) return;
+        
+        if (!active) {
+            if (weatherRadarLayer) {
+                map.removeLayer(weatherRadarLayer);
+                weatherRadarLayer = null;
+            }
             toggleBtn.classList.remove('active');
+            savePreferences();
         } else {
             toggleBtn.classList.add('active');
             fetch('https://api.rainviewer.com/public/weather-maps.json')
@@ -885,6 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!latestFrame) {
                         console.error('No radar frame path found in RainViewer API response');
                         toggleBtn.classList.remove('active');
+                        savePreferences();
                         return;
                     }
 
@@ -900,10 +873,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         zIndex: 100,
                         maxNativeZoom: 7
                     }).addTo(map);
+                    
+                    savePreferences();
                 })
                 .catch(err => {
                     console.error('Failed to load weather radar:', err);
                     toggleBtn.classList.remove('active');
+                    savePreferences();
                     
                     // Show warning banner
                     const warningBanner = document.getElementById('warning-banner');
@@ -914,6 +890,66 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
         }
+    }
+
+    function toggleBadgeFilter(target) {
+        statusFilter = statusFilter === target ? 'all' : target;
+        selectStatus.value = statusFilter;
+        savePreferences();
+        updateDashboard(getActiveRouteList());
+    }
+
+    document.getElementById('filter-active-card').addEventListener('click', () => toggleBadgeFilter('airborne'));
+    document.getElementById('filter-delayed-card').addEventListener('click', () => toggleBadgeFilter('delayed'));
+    document.getElementById('filter-landed-card').addEventListener('click', () => toggleBadgeFilter('landed'));
+
+    document.getElementById('btn-close-drawer').addEventListener('click', () => {
+        selectedFlightId = null;
+        updateDashboard(getActiveRouteList());
+    });
+
+    document.getElementById('btn-clear-airport-filter').addEventListener('click', () => {
+        selectedAirportCode = null;
+        selectAirport(null);
+    });
+
+    document.getElementById('btn-toggle-intl').addEventListener('click', () => {
+        hideInternational = !hideInternational;
+        savePreferences();
+        const toggleBtn = document.getElementById('btn-toggle-intl');
+        if (hideInternational) {
+            toggleBtn.classList.add('active');
+            toggleBtn.innerHTML = '<span>🌏 Show Intl</span>';
+        } else {
+            toggleBtn.classList.remove('active');
+            toggleBtn.innerHTML = '<span>🌏 Hide Intl</span>';
+        }
+        updateDashboard(getActiveRouteList());
+    });
+
+    document.getElementById('btn-toggle-optimize').addEventListener('click', () => {
+        mobileOptimized = !mobileOptimized;
+        savePreferences();
+        const toggleBtn = document.getElementById('btn-toggle-optimize');
+        if (mobileOptimized) {
+            toggleBtn.classList.add('active');
+            document.body.classList.add('mobile-optimized');
+            // Performance: remove heavy SVG airport markers from mobile map view
+            Object.keys(airportMarkers).forEach(c => {
+                map.removeLayer(airportMarkers[c]);
+            });
+        } else {
+            toggleBtn.classList.remove('active');
+            document.body.classList.remove('mobile-optimized');
+            // Restore airport markers (respecting zoom visibility constraints)
+            updateAirportMarkersVisibility();
+        }
+        updateDashboard(getActiveRouteList());
+        drawAirportDestinationConnections();
+    });
+
+    document.getElementById('btn-toggle-weather').addEventListener('click', () => {
+        setWeatherRadarState(!weatherRadarLayer);
     });
 
     // 13. System Warnings & Theme Toggles
@@ -1233,6 +1269,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+    }
+
+    // 17. Load and Apply Persisted Preferences
+    if (searchInput) searchInput.value = searchFilter;
+    if (selectAirline) selectAirline.value = airlineFilter;
+    if (selectType) selectType.value = typeFilter;
+    if (selectState) selectState.value = stateFilter;
+    if (selectStatus) selectStatus.value = statusFilter;
+
+    if (hideInternational) {
+        const toggleBtn = document.getElementById('btn-toggle-intl');
+        if (toggleBtn) {
+            toggleBtn.classList.add('active');
+            toggleBtn.innerHTML = '<span>🌏 Show Intl</span>';
+        }
+    }
+    if (mobileOptimized) {
+        const toggleBtn = document.getElementById('btn-toggle-optimize');
+        if (toggleBtn) {
+            toggleBtn.classList.add('active');
+            document.body.classList.add('mobile-optimized');
+        }
+    }
+    if (weatherRadarActive) {
+        setWeatherRadarState(true);
     }
 
     fetchLiveFlights();
