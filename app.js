@@ -1060,6 +1060,116 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const BOOKED_TEMPLATES = [
+        { flightNo: 'QF401', airlineCode: 'QFA', origin: 'SYD', dest: 'MEL' },
+        { flightNo: 'QF415', airlineCode: 'QFA', origin: 'BNE', dest: 'SYD' },
+        { flightNo: 'VA820', airlineCode: 'VOZ', origin: 'MEL', dest: 'SYD' },
+        { flightNo: 'VA854', airlineCode: 'VOZ', origin: 'SYD', dest: 'BNE' },
+        { flightNo: 'JQ502', airlineCode: 'JST', origin: 'MEL', dest: 'OOM' },
+        { flightNo: 'JQ610', airlineCode: 'JST', origin: 'SYD', dest: 'OOL' },
+        { flightNo: 'ZL210', airlineCode: 'RXA', origin: 'SYD', dest: 'WGA' },
+        { flightNo: 'ZL342', airlineCode: 'RXA', origin: 'MEL', dest: 'ABX' },
+        { flightNo: 'QF510', airlineCode: 'QFA', origin: 'SYD', dest: 'BNE' },
+        { flightNo: 'QF612', airlineCode: 'QFA', origin: 'MEL', dest: 'BNE' },
+        { flightNo: 'VA912', airlineCode: 'VOZ', origin: 'BNE', dest: 'MEL' },
+        { flightNo: 'VA1420', airlineCode: 'VOZ', origin: 'ADL', dest: 'MEL' },
+        { flightNo: 'JQ720', airlineCode: 'JST', origin: 'MEL', dest: 'HBA' },
+        { flightNo: 'JQ812', airlineCode: 'JST', origin: 'SYD', dest: 'CNS' },
+        { flightNo: 'QF742', airlineCode: 'QFA', origin: 'ADL', dest: 'SYD' },
+        { flightNo: 'QF802', airlineCode: 'QFA', origin: 'CBR', dest: 'MEL' },
+        { flightNo: 'VA212', airlineCode: 'VOZ', origin: 'SYD', dest: 'ADL' },
+        { flightNo: 'VA315', airlineCode: 'VOZ', origin: 'MEL', dest: 'ADL' },
+        { flightNo: 'ZL510', airlineCode: 'RXA', origin: 'ADL', dest: 'WGA' },
+        { flightNo: 'JQ902', airlineCode: 'JST', origin: 'OOL', dest: 'SYD' }
+    ];
+
+    function generateBookedScheduledFlights(now) {
+        const flights = [];
+        BOOKED_TEMPLATES.forEach((t, i) => {
+            const hourEpoch = Math.floor(now / (60 * 60 * 1000));
+            const seed = hourEpoch + i;
+            const rand = Math.sin(seed) * 10000;
+            const uRand = Math.abs(rand - Math.floor(rand));
+
+            const departureTime = new Date(now + (i * 12 * 60 * 1000));
+            
+            let delayMinutes = 0;
+            let status = "Scheduled";
+
+            const timeToDepMins = i * 12;
+            if (timeToDepMins < 30) {
+                if (uRand < 0.20) {
+                    status = "Delayed";
+                    delayMinutes = Math.floor(uRand * 40) + 15;
+                } else if (uRand < 0.50) {
+                    status = "Boarding";
+                } else {
+                    status = "Scheduled";
+                }
+            } else {
+                if (uRand < 0.15) {
+                    status = "Delayed";
+                    delayMinutes = Math.floor(uRand * 30) + 10;
+                } else {
+                    status = "Scheduled";
+                }
+            }
+
+            const originObj = window.AIRPORTS[t.origin] ? window.AIRPORTS[t.origin] : { lat: -33.946, lon: 151.177, name: `${t.origin} Airport`, city: t.origin, state: 'NSW' };
+            const destObj = window.AIRPORTS[t.dest] ? window.AIRPORTS[t.dest] : { lat: -37.673, lon: 144.843, name: `${t.dest} Airport`, city: t.dest, state: 'VIC' };
+
+            const lat = originObj.lat;
+            const lon = originObj.lon;
+
+            const distanceKm = simulator.getGreatCircleDistance(originObj.lat, originObj.lon, destObj.lat, destObj.lon);
+            const durationMs = (distanceKm / 750) * 3600 * 1000;
+            const arrivalTime = new Date(departureTime.getTime() + durationMs);
+
+            let airlineName = "Charter / Cargo / General Aviation";
+            let airlineColor = "#6b7280";
+            let isLight = true;
+            
+            if (window.AIRLINES[t.airlineCode]) {
+                const al = window.AIRLINES[t.airlineCode];
+                airlineName = al.name;
+                airlineColor = al.color;
+                isLight = al.textLight;
+            }
+
+            flights.push({
+                id: `SCHED-${t.flightNo}-${hourEpoch}`,
+                flightNo: t.flightNo,
+                callsign: t.flightNo,
+                airline: airlineName,
+                airlineCode: t.airlineCode,
+                airlineColor: airlineColor,
+                airlineTextLight: isLight,
+                aircraftType: 'Boeing 737-800',
+                registration: `VH-VH${i}`,
+                maxAltitude: 39000,
+                maxSpeed: 450,
+                origin: originObj,
+                dest: destObj,
+                distanceKm: Math.round(distanceKm),
+                durationMs: Math.round(durationMs),
+                departureTime: departureTime,
+                arrivalTime: arrivalTime,
+                status: status,
+                delayMinutes: delayMinutes,
+                progress: 0,
+                currentLat: lat,
+                currentLon: lon,
+                currentAlt: 0,
+                currentSpeed: 0,
+                currentHeading: 0,
+                verticalRate: 0,
+                history: [],
+                isLive: true
+            });
+        });
+        return flights;
+    }
+
     function parseFR24RawFeed(raw) {
         if (!raw) return [];
         const flights = [];
@@ -1213,7 +1323,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 isLive: true
             });
         });
-        return flights;
+        
+        const bookedFlights = generateBookedScheduledFlights(now);
+        return [...flights, ...bookedFlights];
     }
 
     function activateSimulationFallback(errMessage) {
