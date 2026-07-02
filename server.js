@@ -199,8 +199,34 @@ function parseFlightRadar24Data(raw) {
 
         let status = "En Route";
         if (onGround) {
-            status = "Landed";
-            progress = 1;
+            let isAtOrigin = false;
+            if (origin.lat !== null && origin.lon !== null) {
+                const distFromOrigin = getDistance(origin.lat, origin.lon, lat, lon);
+                if (distFromOrigin < 4) {
+                    isAtOrigin = true;
+                }
+            }
+            
+            if (isAtOrigin) {
+                progress = 0;
+                // Generate a status: 15% delayed, 25% boarding, 60% scheduled
+                const rand = Math.random();
+                if (rand < 0.15) {
+                    status = "Delayed";
+                    delayMinutes = Math.floor(Math.random() * 40) + 10;
+                } else if (rand < 0.40) {
+                    status = "Boarding";
+                } else {
+                    status = "Scheduled";
+                }
+                
+                // For scheduled/boarding flights, set simulated departure/arrival time estimates
+                departureTime = new Date(now + (delayMinutes > 0 ? delayMinutes * 60 * 1000 : 10 * 60 * 1000));
+                arrivalTime = new Date(departureTime.getTime() + (distanceKm > 0 ? (distanceKm / 750) * 3600 * 1000 : 60 * 60 * 1000));
+            } else {
+                status = "Landed";
+                progress = 1;
+            }
         } else if (verticalRate < -600 && progress > 0.88) {
             status = "Descending";
         } else if (verticalRate > 600 && progress < 0.15) {
@@ -275,6 +301,10 @@ const server = http.createServer((req, res) => {
             .then(data => {
                 const flights = parseFlightRadar24Data(data);
                 
+                if (flights.length === 0 && fr24Cache.data && fr24Cache.data.length > 0) {
+                    throw new Error("FlightRadar24 returned empty feed");
+                }
+                
                 fr24Cache.data = flights;
                 fr24Cache.timestamp = now;
 
@@ -338,7 +368,13 @@ const server = http.createServer((req, res) => {
                 res.end(`Server Error: ${error.code}`);
             }
         } else {
-            res.writeHead(200, { 'Content-Type': contentType });
+            const headers = { 'Content-Type': contentType };
+            if (extname === '.html') {
+                headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+                headers['Pragma'] = 'no-cache';
+                headers['Expires'] = '0';
+            }
+            res.writeHead(200, headers);
             res.end(content, 'utf-8');
         }
     });

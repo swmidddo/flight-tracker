@@ -4,8 +4,41 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Safe Storage helper to avoid security exceptions (e.g. Incognito/corporate policy)
+    const safeStorage = {
+        getItem(key, fallback = null) {
+            try {
+                return localStorage.getItem(key) || fallback;
+            } catch (e) {
+                return fallback;
+            }
+        },
+        setItem(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                // ignore
+            }
+        }
+    };
+
+    // Client-side fetch timeout helper (using AbortController)
+    function fetchWithTimeout(url, options = {}, timeout = 5000) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        return fetch(url, { ...options, signal: controller.signal })
+            .then(res => {
+                clearTimeout(id);
+                return res;
+            })
+            .catch(err => {
+                clearTimeout(id);
+                throw err;
+            });
+    }
+
     // 1. Theme Configuration
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = safeStorage.getItem('theme', 'dark');
     const isLightInitial = savedTheme === 'light';
     if (isLightInitial) {
         document.body.classList.add('light-mode');
@@ -38,15 +71,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFlightId = null;
     let selectedAirportCode = null;
 
-    // Load persisted preferences
-    let searchFilter = localStorage.getItem('pref_searchFilter') || '';
-    let airlineFilter = localStorage.getItem('pref_airlineFilter') || 'all';
-    let statusFilter = localStorage.getItem('pref_statusFilter') || 'all';
-    let stateFilter = localStorage.getItem('pref_stateFilter') || 'all';
-    let typeFilter = localStorage.getItem('pref_typeFilter') || 'all';
-    let hideInternational = localStorage.getItem('pref_hideInternational') === 'true';
-    let mobileOptimized = localStorage.getItem('pref_mobileOptimized') === 'true';
-    let weatherRadarActive = localStorage.getItem('pref_weatherRadarActive') === 'true';
+    // Load persisted preferences safely
+    let searchFilter = safeStorage.getItem('pref_searchFilter', '');
+    let airlineFilter = safeStorage.getItem('pref_airlineFilter', 'all');
+    let statusFilter = safeStorage.getItem('pref_statusFilter', 'all');
+    let stateFilter = safeStorage.getItem('pref_stateFilter', 'all');
+    let typeFilter = safeStorage.getItem('pref_typeFilter', 'all');
+    let hideInternational = safeStorage.getItem('pref_hideInternational', 'false') === 'true';
+    let mobileOptimized = safeStorage.getItem('pref_mobileOptimized', 'false') === 'true';
+    let weatherRadarActive = safeStorage.getItem('pref_weatherRadarActive', 'false') === 'true';
     let weatherRadarLayer = null;
 
     let liveFlights = [];
@@ -140,15 +173,16 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAirportMarkersVisibility();
 
     // 5. Plane Marker Icon Factory
-    function createPlaneIcon(heading, color, isSelected) {
+    function createPlaneIcon(heading, color, isSelected, isScheduled) {
         const size = isSelected ? 32 : 22;
         const glowSize = isSelected ? '12px' : '4px';
         const pulseClass = isSelected ? 'plane-pulse' : '';
+        const opacity = isScheduled ? 0.6 : 1.0;
 
         return L.divIcon({
             className: `plane-icon-div ${pulseClass}`,
             html: `
-                <div style="width: ${size}px; height: ${size}px; transform: rotate(${heading}deg); transition: transform 0.25s linear;">
+                <div style="width: ${size}px; height: ${size}px; transform: rotate(${heading}deg); transition: transform 0.25s linear; opacity: ${opacity};">
                     <svg viewBox="0 0 24 24" width="100%" height="100%" fill="${color}" style="filter: drop-shadow(0 0 ${glowSize} ${color}); display: block;">
                         <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
                     </svg>
@@ -242,21 +276,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         filtered.forEach(flight => {
-            if (flight.status === 'Scheduled' || flight.status === 'Boarding') {
-                if (planeMarkers[flight.id]) {
-                    map.removeLayer(planeMarkers[flight.id]);
-                    delete planeMarkers[flight.id];
-                }
-                return;
-            }
-
             visibleIds.add(flight.id);
             const isSelected = flight.id === selectedFlightId;
             const latlng = [flight.currentLat, flight.currentLon];
+            const isScheduled = ['Scheduled', 'Boarding', 'Delayed'].includes(flight.status);
 
             if (!planeMarkers[flight.id]) {
                 const marker = L.marker(latlng, {
-                    icon: createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected),
+                    icon: createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected, isScheduled),
                     zIndexOffset: isSelected ? 2000 : 500
                 }).addTo(map);
 
@@ -267,11 +294,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 marker.on('click', () => selectFlight(flight.id));
+                
+                // Cache state values on marker to prevent unnecessary redraws
+                marker._lastHeading = flight.currentHeading;
+                marker._lastColor = flight.airlineColor;
+                marker._lastSelected = isSelected;
+                marker._lastScheduled = isScheduled;
+
                 planeMarkers[flight.id] = marker;
             } else {
-                planeMarkers[flight.id].setLatLng(latlng);
-                planeMarkers[flight.id].setIcon(createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected));
-                planeMarkers[flight.id].setZIndexOffset(isSelected ? 2000 : 500);
+                const marker = planeMarkers[flight.id];
+                const currentLatLng = marker.getLatLng();
+                if (currentLatLng.lat !== latlng[0] || currentLatLng.lng !== latlng[1]) {
+                    marker.setLatLng(latlng);
+                }
+                
+                // Only call setIcon if the icon properties changed (highly optimized)
+                if (marker._lastHeading !== flight.currentHeading || 
+                    marker._lastColor !== flight.airlineColor || 
+                    marker._lastSelected !== isSelected ||
+                    marker._lastScheduled !== isScheduled) {
+                    
+                    marker.setIcon(createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected, isScheduled));
+                    marker._lastHeading = flight.currentHeading;
+                    marker._lastColor = flight.airlineColor;
+                    marker._lastSelected = isSelected;
+                    marker._lastScheduled = isScheduled;
+                }
+                marker.setZIndexOffset(isSelected ? 2000 : 500);
             }
         });
 
@@ -1076,6 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let progress = 0.5;
             let departureTime = new Date(now - 30 * 60 * 1000);
             let arrivalTime = new Date(now + 30 * 60 * 1000);
+            let delayMinutes = 0;
 
             if (origin.lat !== null && dest.lat !== null) {
                 distanceKm = simulator.getGreatCircleDistance(origin.lat, origin.lon, dest.lat, dest.lon);
@@ -1098,8 +1149,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let status = "En Route";
             if (onGround) {
-                status = "Landed";
-                progress = 1;
+                let isAtOrigin = false;
+                if (origin.lat !== null && origin.lon !== null) {
+                    const distFromOrigin = simulator.getGreatCircleDistance(origin.lat, origin.lon, lat, lon);
+                    if (distFromOrigin < 4) {
+                        isAtOrigin = true;
+                    }
+                }
+                
+                if (isAtOrigin) {
+                    progress = 0;
+                    const rand = Math.random();
+                    if (rand < 0.15) {
+                        status = "Delayed";
+                        delayMinutes = Math.floor(Math.random() * 40) + 10;
+                    } else if (rand < 0.40) {
+                        status = "Boarding";
+                    } else {
+                        status = "Scheduled";
+                    }
+                    
+                    departureTime = new Date(now + (delayMinutes > 0 ? delayMinutes * 60 * 1000 : 10 * 60 * 1000));
+                    arrivalTime = new Date(departureTime.getTime() + (distanceKm > 0 ? (distanceKm / 750) * 3600 * 1000 : 60 * 60 * 1000));
+                } else {
+                    status = "Landed";
+                    progress = 1;
+                }
             } else if (vrate < -600 && progress > 0.88) {
                 status = "Descending";
             } else if (vrate > 600 && progress < 0.15) {
@@ -1125,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 departureTime: departureTime,
                 arrivalTime: arrivalTime,
                 status: status,
-                delayMinutes: 0,
+                delayMinutes: delayMinutes,
                 progress: progress,
                 currentLat: lat,
                 currentLon: lon,
@@ -1164,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const bounds = '-10,-45,110,155';
         const fr24Url = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${bounds}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=1&estimated=1&maxage=14400&gliders=1&stats=1`;
 
-        fetch('/api/live-flights')
+        fetchWithTimeout('/api/live-flights', {}, 5000)
             .then(res => res.json())
             .then(data => {
                 if (data.success && !data.fallback) {
@@ -1174,14 +1249,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(() => {
-                fetch(`https://corsproxy.io/?url=${encodeURIComponent(fr24Url)}`)
+                fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(fr24Url)}`, {}, 5000)
                     .then(res => res.json())
                     .then(data => {
                         const parsed = parseFR24RawFeed(data);
                         processFetchedData(parsed);
                     })
                     .catch(() => {
-                        fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fr24Url)}`)
+                        fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(fr24Url)}`, {}, 5000)
                             .then(res => res.json())
                             .then(data => {
                                 const parsed = parseFR24RawFeed(data);
@@ -1197,6 +1272,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function processFetchedData(flights) {
         isFetchingLive = false;
+        
+        if (!flights || flights.length === 0) {
+            console.warn("Received empty flight list. Retaining existing flight markers.");
+            activateSimulationFallback("Empty flight list received from proxy.");
+            return;
+        }
+
         lastLiveFetch = Date.now();
 
         const indicator = document.getElementById('live-indicator');
