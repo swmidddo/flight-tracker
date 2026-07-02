@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (statusFilter === 'landed' && f.status !== 'Landed') return false;
                 if (statusFilter === 'airborne' && !['En Route', 'Climbing', 'Descending'].includes(f.status)) return false;
                 if (statusFilter === 'scheduled' && !['Scheduled', 'Boarding'].includes(f.status)) return false;
-                if (statusFilter === 'booked' && !f.id.startsWith('SCHED-') && !f.id.startsWith('DYNAMIC-')) return false;
+                if (statusFilter === 'booked' && !['Scheduled', 'Boarding', 'Delayed'].includes(f.status)) return false;
             }
 
             if (stateFilter !== 'all') {
@@ -1187,7 +1187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { flightNo: 'VA212', airlineCode: 'VOZ', origin: 'SYD', dest: 'ADL' },
         { flightNo: 'VA315', airlineCode: 'VOZ', origin: 'MEL', dest: 'ADL' },
         { flightNo: 'ZL510', airlineCode: 'RXA', origin: 'ADL', dest: 'WGA' },
-        { flightNo: 'JQ902', airlineCode: 'JST', origin: 'OOL', dest: 'SYD' }
+        { flightNo: 'JQ902', airlineCode: 'JST', origin: 'OOL', dest: 'SYD' },
+        { flightNo: 'VA946', airlineCode: 'VOZ', origin: 'BNE', dest: 'SYD' }
     ];
 
     function generateBookedScheduledFlights(now) {

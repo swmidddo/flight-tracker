@@ -114,7 +114,8 @@ const BOOKED_TEMPLATES = [
     { flightNo: 'VA212', airlineCode: 'VOZ', origin: 'SYD', dest: 'ADL' },
     { flightNo: 'VA315', airlineCode: 'VOZ', origin: 'MEL', dest: 'ADL' },
     { flightNo: 'ZL510', airlineCode: 'RXA', origin: 'ADL', dest: 'WGA' },
-    { flightNo: 'JQ902', airlineCode: 'JST', origin: 'OOL', dest: 'SYD' }
+    { flightNo: 'JQ902', airlineCode: 'JST', origin: 'OOL', dest: 'SYD' },
+    { flightNo: 'VA946', airlineCode: 'VOZ', origin: 'BNE', dest: 'SYD' }
 ];
 
 function generateBookedScheduledFlights(now) {
