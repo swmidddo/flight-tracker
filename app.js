@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let mobileOptimized = safeStorage.getItem('pref_mobileOptimized', 'false') === 'true';
     let weatherRadarActive = safeStorage.getItem('pref_weatherRadarActive', 'false') === 'true';
     let weatherRadarLayer = null;
+    let fetchFailCount = 0;
 
     let liveFlights = [];
     let userFlights = [];
@@ -1217,18 +1218,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function activateSimulationFallback(errMessage) {
         console.warn(`Connection to live feed server lost. Reason: ${errMessage}`);
+        fetchFailCount++;
+        
         const indicator = document.getElementById('live-indicator');
-        indicator.className = "live-badge";
-        indicator.style.borderColor = "var(--rose)";
-        indicator.style.color = "var(--rose)";
-        indicator.style.background = "rgba(244, 63, 94, 0.1)";
-        indicator.textContent = "Offline / Retrying";
+        if (indicator) {
+            indicator.className = "live-badge";
+            indicator.style.borderColor = "var(--rose)";
+            indicator.style.color = "var(--rose)";
+            indicator.style.background = "rgba(244, 63, 94, 0.1)";
+            
+            if (lastLiveFetch === 0) {
+                indicator.textContent = "Connecting...";
+            } else {
+                indicator.textContent = "Offline / Retrying";
+            }
+        }
 
         const warningBanner = document.getElementById('warning-banner');
         if (warningBanner) {
-            document.getElementById('warn-title').textContent = "Network Interruption";
-            document.getElementById('warn-desc').textContent = "Live flight data feed offline. Retrying connections...";
-            warningBanner.style.display = 'flex';
+            if (lastLiveFetch > 0) {
+                document.getElementById('warn-title').textContent = "Network Interruption";
+                document.getElementById('warn-desc').textContent = "Live flight data feed offline. Retrying connections...";
+                warningBanner.style.display = 'flex';
+            } else if (fetchFailCount >= 3) {
+                document.getElementById('warn-title').textContent = "Server Cold Start";
+                document.getElementById('warn-desc').textContent = "Waking up server backend (takes up to 50 seconds on cold start). Retrying...";
+                warningBanner.style.display = 'flex';
+            }
         }
     }
 
@@ -1239,7 +1255,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const bounds = '-10,-45,110,155';
         const fr24Url = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${bounds}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=1&estimated=1&maxage=14400&gliders=1&stats=1`;
 
-        fetchWithTimeout('/api/live-flights', {}, 5000)
+        const indicator = document.getElementById('live-indicator');
+        if (indicator && lastLiveFetch === 0) {
+            indicator.textContent = fetchFailCount > 0 ? "Waking up..." : "Connecting...";
+            indicator.style.borderColor = "var(--cyan)";
+            indicator.style.color = "var(--cyan)";
+            indicator.style.background = "rgba(6, 182, 212, 0.1)";
+        }
+
+        fetchWithTimeout('/api/live-flights', {}, 20000)
             .then(res => res.json())
             .then(data => {
                 if (data.success && !data.fallback) {
@@ -1249,14 +1273,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(() => {
-                fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(fr24Url)}`, {}, 5000)
+                fetchWithTimeout(`https://corsproxy.io/?url=${encodeURIComponent(fr24Url)}`, {}, 8000)
                     .then(res => res.json())
                     .then(data => {
                         const parsed = parseFR24RawFeed(data);
                         processFetchedData(parsed);
                     })
                     .catch(() => {
-                        fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(fr24Url)}`, {}, 5000)
+                        fetchWithTimeout(`https://api.allorigins.win/raw?url=${encodeURIComponent(fr24Url)}`, {}, 8000)
                             .then(res => res.json())
                             .then(data => {
                                 const parsed = parseFR24RawFeed(data);
@@ -1279,14 +1303,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        fetchFailCount = 0;
+        const warningBanner = document.getElementById('warning-banner');
+        if (warningBanner) {
+            warningBanner.style.display = 'none';
+        }
+
         lastLiveFetch = Date.now();
 
         const indicator = document.getElementById('live-indicator');
-        indicator.className = "live-badge";
-        indicator.style.borderColor = "";
-        indicator.style.color = "";
-        indicator.style.background = "";
-        indicator.textContent = "Live Radar";
+        if (indicator) {
+            indicator.className = "live-badge";
+            indicator.style.borderColor = "";
+            indicator.style.color = "";
+            indicator.style.background = "";
+            indicator.textContent = "Live Radar";
+        }
 
         // Accumulate history for live flights from the previous liveFlights array
         const prevLiveMap = {};
