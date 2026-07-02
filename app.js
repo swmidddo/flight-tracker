@@ -246,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (statusFilter === 'landed' && f.status !== 'Landed') return false;
                 if (statusFilter === 'airborne' && !['En Route', 'Climbing', 'Descending'].includes(f.status)) return false;
                 if (statusFilter === 'scheduled' && !['Scheduled', 'Boarding'].includes(f.status)) return false;
+                if (statusFilter === 'booked' && !f.id.startsWith('SCHED-') && !f.id.startsWith('DYNAMIC-')) return false;
             }
 
             if (stateFilter !== 'all') {
@@ -505,10 +506,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const airborne = flights.filter(f => ['En Route', 'Climbing', 'Descending', 'Delayed'].includes(f.status)).length;
         const delayed = flights.filter(f => f.status === 'Delayed').length;
         const landed = flights.filter(f => f.status === 'Landed').length;
+        const booked = flights.filter(f => f.id.startsWith('SCHED-') || f.id.startsWith('DYNAMIC-')).length;
 
         document.getElementById('count-active').textContent = airborne;
         document.getElementById('count-delayed').textContent = delayed;
         document.getElementById('count-landed').textContent = landed;
+        
+        const bookedEl = document.getElementById('count-booked');
+        if (bookedEl) bookedEl.textContent = booked;
         
         document.getElementById('overlay-airborne-count').textContent = airborne;
         document.getElementById('overlay-ground-count').textContent = landed;
@@ -948,14 +953,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeCard = document.getElementById('filter-active-card');
         const delayedCard = document.getElementById('filter-delayed-card');
         const landedCard = document.getElementById('filter-landed-card');
+        const bookedCard = document.getElementById('filter-booked-card');
 
         if (activeCard) activeCard.classList.remove('active-filter');
         if (delayedCard) delayedCard.classList.remove('active-filter');
         if (landedCard) landedCard.classList.remove('active-filter');
+        if (bookedCard) bookedCard.classList.remove('active-filter');
 
         if (statusFilter === 'airborne' && activeCard) activeCard.classList.add('active-filter');
         else if (statusFilter === 'delayed' && delayedCard) delayedCard.classList.add('active-filter');
         else if (statusFilter === 'landed' && landedCard) landedCard.classList.add('active-filter');
+        else if (statusFilter === 'booked' && bookedCard) bookedCard.classList.add('active-filter');
     }
 
     function savePreferences() {
@@ -1047,6 +1055,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-active-card').addEventListener('click', () => toggleBadgeFilter('airborne'));
     document.getElementById('filter-delayed-card').addEventListener('click', () => toggleBadgeFilter('delayed'));
     document.getElementById('filter-landed-card').addEventListener('click', () => toggleBadgeFilter('landed'));
+    
+    const bookedBtn = document.getElementById('filter-booked-card');
+    if (bookedBtn) {
+        bookedBtn.addEventListener('click', () => toggleBadgeFilter('booked'));
+    }
 
     document.getElementById('btn-close-drawer').addEventListener('click', () => {
         selectedFlightId = null;
