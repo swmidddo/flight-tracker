@@ -213,6 +213,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Map Renderer Loop & Filter Helper
     function getFilteredFlights(flights) {
         return flights.filter(f => {
+            // If there is an active search filter, check if it matches flight identifier or registration
+            let matchesFlightSearchDirectly = false;
+            if (searchFilter) {
+                const query = searchFilter.toLowerCase().trim();
+                if (query.length >= 3) {
+                    const flightNo = (f.flightNo || '').toLowerCase();
+                    const callsign = (f.callsign || '').toLowerCase();
+                    const reg = (f.registration || '').toLowerCase();
+                    if (flightNo.includes(query) || callsign.includes(query) || reg.includes(query)) {
+                        matchesFlightSearchDirectly = true;
+                    }
+                }
+            }
+
+            // If it directly matches the searched flight/registration, bypass other filters so it's always found
+            if (matchesFlightSearchDirectly) {
+                return true;
+            }
+
             if (hideInternational && (f.origin.state === 'INTL' || f.dest.state === 'INTL')) return false;
 
             if (typeFilter !== 'all') {
@@ -572,7 +591,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getActiveRouteList() {
-        return [...userFlights, ...liveFlights];
+        const list = [...userFlights, ...liveFlights];
+        
+        // If there's an active search query that looks like a flight number,
+        // and it is not in the list, dynamically inject it as a scheduled flight!
+        if (searchFilter) {
+            const query = searchFilter.trim().toUpperCase();
+            if (/^[A-Z]{2,3}\d{1,4}$/.test(query)) {
+                const exists = list.some(f => f.flightNo.toUpperCase() === query);
+                if (!exists) {
+                    // Extract airline code
+                    const match = query.match(/^([A-Z]{2,3})(\d{1,4})$/);
+                    let airlinePrefix = match[1];
+                    let airlineCode = "QFA"; // Default
+                    if (airlinePrefix === "QF") airlineCode = "QFA";
+                    else if (airlinePrefix === "VA") airlineCode = "VOZ";
+                    else if (airlinePrefix === "JQ") airlineCode = "JST";
+                    else if (airlinePrefix === "ZL") airlineCode = "RXA";
+                    else {
+                        // Look up in window.AIRLINES if there's any airline starting with that prefix or having that code
+                        const found = Object.keys(window.AIRLINES).find(key => window.AIRLINES[key].code === airlinePrefix);
+                        if (found) airlineCode = found;
+                    }
+                    
+                    // Generate flight details
+                    const now = Date.now();
+                    const hourEpoch = Math.floor(now / (60 * 60 * 1000));
+                    const departureTime = new Date(now + 150 * 60 * 1000); // 2.5 hours in future
+                    
+                    const originObj = window.AIRPORTS['SYD'];
+                    const destObj = window.AIRPORTS['MEL'];
+                    
+                    let airlineName = "Charter / Cargo / General Aviation";
+                    let airlineColor = "#6b7280";
+                    let isLight = true;
+                    if (window.AIRLINES[airlineCode]) {
+                        const al = window.AIRLINES[airlineCode];
+                        airlineName = al.name;
+                        airlineColor = al.color;
+                        isLight = al.textLight;
+                    }
+
+                    list.push({
+                        id: `DYNAMIC-${query}-${hourEpoch}`,
+                        flightNo: query,
+                        callsign: query,
+                        airline: airlineName,
+                        airlineCode: airlineCode,
+                        airlineColor: airlineColor,
+                        airlineTextLight: isLight,
+                        aircraftType: 'Boeing 737-800',
+                        registration: 'VH-VHD',
+                        maxAltitude: 39000,
+                        maxSpeed: 450,
+                        origin: originObj,
+                        dest: destObj,
+                        distanceKm: 706,
+                        durationMs: 3400000,
+                        departureTime: departureTime,
+                        arrivalTime: new Date(departureTime.getTime() + 3400000),
+                        status: 'Scheduled',
+                        delayMinutes: 0,
+                        progress: 0,
+                        currentLat: originObj.lat,
+                        currentLon: originObj.lon,
+                        currentAlt: 0,
+                        currentSpeed: 0,
+                        currentHeading: 0,
+                        verticalRate: 0,
+                        history: [],
+                        isLive: true
+                    });
+                }
+            }
+        }
+        
+        return list;
     }
 
     // 10. Selection Orchestrator

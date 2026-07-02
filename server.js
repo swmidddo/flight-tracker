@@ -443,13 +443,15 @@ const server = http.createServer((req, res) => {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
                     });
+                    const bookedFlights = generateBookedScheduledFlights(now);
+                    const combinedFlights = [...fr24Cache.data, ...bookedFlights];
                     res.end(JSON.stringify({ 
                         success: true, 
                         fallback: false,
                         cached: true,
                         stale: true,
-                        flightsCount: fr24Cache.data.length,
-                        flights: fr24Cache.data 
+                        flightsCount: combinedFlights.length,
+                        flights: combinedFlights 
                     }));
                     return;
                 }
