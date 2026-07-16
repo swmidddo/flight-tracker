@@ -220,8 +220,20 @@ function parseFlightRadar24Data(raw) {
         if (!Array.isArray(flightArr) || flightArr.length < 18) return;
 
         const callsign = (flightArr[16] || '').trim();
-        const flightNo = (flightArr[13] || '').trim() || callsign;
+        let flightNo = (flightArr[13] || '').trim() || callsign;
         if (!flightNo) return;
+
+        // Convert to IATA format if it is ICAO
+        if (AIRLINES) {
+            const match = flightNo.match(/^([A-Z]{3})(\d{1,4}[A-Z]?)$/i);
+            if (match) {
+                const icaoPrefix = match[1].toUpperCase();
+                const numPart = match[2];
+                if (AIRLINES[icaoPrefix]) {
+                    flightNo = AIRLINES[icaoPrefix].code + numPart;
+                }
+            }
+        }
 
         const lat = flightArr[1];
         const lon = flightArr[2];

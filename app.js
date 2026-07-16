@@ -216,12 +216,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // If there is an active search filter, check if it matches flight identifier or registration
             let matchesFlightSearchDirectly = false;
             if (searchFilter) {
-                const query = searchFilter.toLowerCase().trim();
-                if (query.length >= 3) {
-                    const flightNo = (f.flightNo || '').toLowerCase();
-                    const callsign = (f.callsign || '').toLowerCase();
+                let query = searchFilter.toLowerCase().trim();
+                let cleanQuery = query.replace(/\s+/g, '');
+                
+                // Normalize cleanQuery to IATA format if it is in ICAO format
+                const icaoMatch = cleanQuery.match(/^([a-z]{3})(\d{1,4}[a-z]?)$/i);
+                if (icaoMatch && window.AIRLINES) {
+                    const icaoPrefix = icaoMatch[1].toUpperCase();
+                    const numPart = icaoMatch[2];
+                    if (window.AIRLINES[icaoPrefix]) {
+                        cleanQuery = (window.AIRLINES[icaoPrefix].code + numPart).toLowerCase();
+                    }
+                }
+
+                if (cleanQuery.length >= 3) {
+                    const flightNo = (f.flightNo || '').toLowerCase().replace(/\s+/g, '');
+                    const callsign = (f.callsign || '').toLowerCase().replace(/\s+/g, '');
                     const reg = (f.registration || '').toLowerCase();
-                    if (flightNo.includes(query) || callsign.includes(query) || reg.includes(query)) {
+                    if (flightNo.includes(cleanQuery) || callsign.includes(cleanQuery) || reg.includes(cleanQuery)) {
                         matchesFlightSearchDirectly = true;
                     }
                 }
@@ -259,14 +271,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (searchFilter) {
                 const query = searchFilter.toLowerCase().trim();
-                const flightNo = (f.flightNo || '').toLowerCase();
-                const callsign = (f.callsign || '').toLowerCase();
+                let cleanQuery = query.replace(/\s+/g, '');
+                
+                // Normalize cleanQuery to IATA format if it is in ICAO format
+                const icaoMatch = cleanQuery.match(/^([a-z]{3})(\d{1,4}[a-z]?)$/i);
+                if (icaoMatch && window.AIRLINES) {
+                    const icaoPrefix = icaoMatch[1].toUpperCase();
+                    const numPart = icaoMatch[2];
+                    if (window.AIRLINES[icaoPrefix]) {
+                        cleanQuery = (window.AIRLINES[icaoPrefix].code + numPart).toLowerCase();
+                    }
+                }
+
+                const flightNo = (f.flightNo || '').toLowerCase().replace(/\s+/g, '');
+                const callsign = (f.callsign || '').toLowerCase().replace(/\s+/g, '');
                 const airline = (f.airline || '').toLowerCase();
                 const airlineCode = (f.airlineCode || '').toLowerCase();
                 const registration = (f.registration || '').toLowerCase();
                 const aircraftType = (f.aircraftType || '').toLowerCase();
 
-                const matchesNo = flightNo.includes(query) || callsign.includes(query) || registration.includes(query);
+                const matchesNo = flightNo.includes(cleanQuery) || callsign.includes(cleanQuery) || registration.includes(cleanQuery) || flightNo.includes(query) || callsign.includes(query) || registration.includes(query);
                 const matchesAirline = airline.includes(query) || airlineCode.includes(query);
                 const matchesAircraft = aircraftType.includes(query);
 
@@ -601,7 +625,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // If there's an active search query that looks like a flight number,
         // and it is not in the list, dynamically inject it as a scheduled flight!
         if (searchFilter) {
-            const query = searchFilter.trim().toUpperCase();
+            let query = searchFilter.replace(/\s+/g, '').toUpperCase();
+            
+            // Normalize ICAO query to IATA query (e.g. QFA123 -> QF123)
+            const icaoMatch = query.match(/^([A-Z]{3})(\d{1,4}[A-Z]?)$/);
+            if (icaoMatch && window.AIRLINES) {
+                const icaoPrefix = icaoMatch[1].toUpperCase();
+                const numPart = icaoMatch[2];
+                if (window.AIRLINES[icaoPrefix]) {
+                    query = window.AIRLINES[icaoPrefix].code + numPart;
+                }
+            }
+            
             if (/^[A-Z]{2,3}\d{1,4}$/.test(query)) {
                 const exists = list.some(f => f.flightNo.toUpperCase() === query);
                 if (!exists) {
@@ -1289,8 +1324,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(fArr) || fArr.length < 18) return;
 
             const callsign = (fArr[16] || '').trim();
-            const flightNo = (fArr[13] || '').trim() || callsign;
+            let flightNo = (fArr[13] || '').trim() || callsign;
             if (!flightNo) return;
+
+            // Convert to IATA format if it is ICAO
+            if (window.AIRLINES) {
+                const match = flightNo.match(/^([A-Z]{3})(\d{1,4}[A-Z]?)$/i);
+                if (match) {
+                    const icaoPrefix = match[1].toUpperCase();
+                    const numPart = match[2];
+                    if (window.AIRLINES[icaoPrefix]) {
+                        flightNo = window.AIRLINES[icaoPrefix].code + numPart;
+                    }
+                }
+            }
 
             const lat = fArr[1];
             const lon = fArr[2];
