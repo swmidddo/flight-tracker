@@ -935,6 +935,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (searchInput) {
                 searchInput.value = '';
                 searchFilter = '';
+                
+                selectedFlightId = null;
+                selectedAirportCode = null;
+                
+                if (selectAirline) {
+                    selectAirline.value = 'all';
+                    airlineFilter = 'all';
+                }
+                if (selectType) {
+                    selectType.value = 'all';
+                    typeFilter = 'all';
+                }
+                if (selectState) {
+                    selectState.value = 'all';
+                    stateFilter = 'all';
+                }
+                if (selectStatus) {
+                    selectStatus.value = 'all';
+                    statusFilter = 'all';
+                }
+                
                 savePreferences();
                 updateDashboard(getActiveRouteList());
                 renderSearchSuggestions();
