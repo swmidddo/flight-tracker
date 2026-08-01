@@ -775,7 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const hourEpoch = Math.floor(now / (60 * 60 * 1000));
                     
                     const KNOWN_FLIGHTS_SCHEDULE = {
-                        'QQ4359': { origin: 'MOV', dest: 'BNE', aircraft: 'Fokker 100', daysOfWeek: [3, 4], timeStr: '15:25', durationMs: 86 * 60 * 1000 } // Wed/Thu at 3:25 PM
+                        'QQ4359': { origin: 'MOV', dest: 'BNE', aircraft: 'Fokker 100', daysOfWeek: [3, 4], timeStr: '15:25', durationMs: 86 * 60 * 1000 }, // Wed/Thu at 3:25 PM
+                        'QF1929': { origin: 'EMD', dest: 'BNE', aircraft: 'Dash 8 Q400', registration: 'VH-QQA', isDaily: true } // Daily Emerald-Brisbane
                     };
                     
                     let originObj, destObj, departureTime, aircraftType, registration, customDurationMs = null;
@@ -785,34 +786,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         const sched = KNOWN_FLIGHTS_SCHEDULE[normalizedQuery];
                         originObj = window.AIRPORTS[sched.origin] || window.AIRPORTS['SYD'];
                         destObj = window.AIRPORTS[sched.dest] || window.AIRPORTS['MEL'];
-                        aircraftType = sched.aircraft;
-                        registration = 'VH-FOK'; // Fokker registration
+                        aircraftType = sched.aircraft || 'Boeing 737-800';
+                        registration = sched.registration || 'VH-QQA';
                         if (sched.durationMs) customDurationMs = sched.durationMs;
                         
-                        // Calculate next Wednesday (3) or Thursday (4)
-                        const daysOfWeek = sched.daysOfWeek;
-                        const [hours, minutes] = sched.timeStr.split(':').map(Number);
-                        
-                        let nextDate = null;
-                        let minDiffMs = Infinity;
-                        
-                        daysOfWeek.forEach(targetDay => {
-                            const tempDate = new Date(now);
-                            const currentDay = tempDate.getDay();
-                            let daysUntilTarget = (targetDay - currentDay + 7) % 7;
-                            if (daysUntilTarget === 0 && (tempDate.getHours() > hours || (tempDate.getHours() === hours && tempDate.getMinutes() >= minutes))) {
-                                daysUntilTarget = 7;
-                            }
-                            tempDate.setDate(tempDate.getDate() + daysUntilTarget);
-                            tempDate.setHours(hours, minutes, 0, 0);
+                        if (sched.isDaily) {
+                            departureTime = new Date(now + 150 * 60 * 1000); // 2.5 hours in future (today)
+                        } else {
+                            // Calculate next Wednesday (3) or Thursday (4)
+                            const daysOfWeek = sched.daysOfWeek;
+                            const [hours, minutes] = sched.timeStr.split(':').map(Number);
                             
-                            const diff = tempDate.getTime() - now;
-                            if (diff < minDiffMs) {
-                                minDiffMs = diff;
-                                nextDate = tempDate;
-                            }
-                        });
-                        departureTime = nextDate;
+                            let nextDate = null;
+                            let minDiffMs = Infinity;
+                            
+                            daysOfWeek.forEach(targetDay => {
+                                const tempDate = new Date(now);
+                                const currentDay = tempDate.getDay();
+                                let daysUntilTarget = (targetDay - currentDay + 7) % 7;
+                                if (daysUntilTarget === 0 && (tempDate.getHours() > hours || (tempDate.getHours() === hours && tempDate.getMinutes() >= minutes))) {
+                                    daysUntilTarget = 7;
+                                }
+                                tempDate.setDate(tempDate.getDate() + daysUntilTarget);
+                                tempDate.setHours(hours, minutes, 0, 0);
+                                
+                                const diff = tempDate.getTime() - now;
+                                if (diff < minDiffMs) {
+                                    minDiffMs = diff;
+                                    nextDate = tempDate;
+                                }
+                            });
+                            departureTime = nextDate;
+                        }
                     } else {
                         // Generate deterministic route using hashing
                         const airportKeys = Object.keys(window.AIRPORTS).filter(k => window.AIRPORTS[k].state !== 'INTL');
