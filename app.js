@@ -586,7 +586,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             });
         }
-        board.innerHTML = cardsHtml;
+        const scrollPos = board ? board.scrollTop : 0;
+        if (board) board.innerHTML = cardsHtml;
+        if (board) board.scrollTop = scrollPos;
 
         document.querySelectorAll('.flight-card').forEach(card => {
             card.addEventListener('click', () => {
