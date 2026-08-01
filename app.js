@@ -553,8 +553,19 @@ document.addEventListener('DOMContentLoaded', () => {
             filtered.forEach(f => {
                 const isSelected = f.id === selectedFlightId;
                 const badgeClass = f.status.toLowerCase().replace(' ', '-');
-                const depTime = new Date(f.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const arrTime = new Date(f.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const today = new Date();
+                const depDate = new Date(f.departureTime);
+                const arrDate = new Date(f.arrivalTime);
+                
+                const isDepToday = depDate.getDate() === today.getDate() && depDate.getMonth() === today.getMonth() && depDate.getFullYear() === today.getFullYear();
+                const isArrToday = arrDate.getDate() === today.getDate() && arrDate.getMonth() === today.getMonth() && arrDate.getFullYear() === today.getFullYear();
+                
+                const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const depPrefix = isDepToday ? '' : `${days[depDate.getDay()]} `;
+                const arrPrefix = isArrToday ? '' : `${days[arrDate.getDay()]} `;
+                
+                const depTime = depPrefix + depDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const arrTime = arrPrefix + arrDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 
                 let delayText = '';
                 if (f.delayMinutes > 0) {
@@ -666,8 +677,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('telemetry-dest-code').textContent = flight.dest.code;
         document.getElementById('telemetry-dest-name').textContent = flight.dest.city;
 
-        const depTime = new Date(flight.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const arrTime = new Date(flight.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const today = new Date();
+        const depDate = new Date(flight.departureTime);
+        const arrDate = new Date(flight.arrivalTime);
+        
+        const isDepToday = depDate.getDate() === today.getDate() && depDate.getMonth() === today.getMonth() && depDate.getFullYear() === today.getFullYear();
+        const isArrToday = arrDate.getDate() === today.getDate() && arrDate.getMonth() === today.getMonth() && arrDate.getFullYear() === today.getFullYear();
+        
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const depPrefix = isDepToday ? '' : `${days[depDate.getDay()]} `;
+        const arrPrefix = isArrToday ? '' : `${days[arrDate.getDay()]} `;
+        
+        const depTime = depPrefix + depDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const arrTime = arrPrefix + arrDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
         document.getElementById('telemetry-dep-time').textContent = depTime;
         document.getElementById('telemetry-arr-time').textContent = arrTime;
 
@@ -750,10 +773,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Generate flight details
                     const now = Date.now();
                     const hourEpoch = Math.floor(now / (60 * 60 * 1000));
-                    const departureTime = new Date(now + 150 * 60 * 1000); // 2.5 hours in future
                     
-                    const originObj = window.AIRPORTS['SYD'];
-                    const destObj = window.AIRPORTS['MEL'];
+                    const KNOWN_FLIGHTS_SCHEDULE = {
+                        'QQ4359': { origin: 'MOV', dest: 'BNE', aircraft: 'Fokker 100', dayOfWeek: 3, timeStr: '10:30' } // Wednesday
+                    };
+                    
+                    let originObj, destObj, departureTime, aircraftType, registration;
+                    
+                    const normalizedQuery = query.toUpperCase();
+                    if (KNOWN_FLIGHTS_SCHEDULE[normalizedQuery]) {
+                        const sched = KNOWN_FLIGHTS_SCHEDULE[normalizedQuery];
+                        originObj = window.AIRPORTS[sched.origin] || window.AIRPORTS['SYD'];
+                        destObj = window.AIRPORTS[sched.dest] || window.AIRPORTS['MEL'];
+                        aircraftType = sched.aircraft;
+                        registration = 'VH-FOK'; // Fokker registration
+                        
+                        // Calculate next Wednesday (dayOfWeek: 3)
+                        const targetDay = sched.dayOfWeek;
+                        const [hours, minutes] = sched.timeStr.split(':').map(Number);
+                        
+                        const tempDate = new Date(now);
+                        const currentDay = tempDate.getDay();
+                        let daysUntilTarget = (targetDay - currentDay + 7) % 7;
+                        if (daysUntilTarget === 0 && tempDate.getHours() >= hours) {
+                            daysUntilTarget = 7;
+                        }
+                        tempDate.setDate(tempDate.getDate() + daysUntilTarget);
+                        tempDate.setHours(hours, minutes, 0, 0);
+                        departureTime = tempDate;
+                    } else {
+                        // Generate deterministic route using hashing
+                        const airportKeys = Object.keys(window.AIRPORTS).filter(k => window.AIRPORTS[k].state !== 'INTL');
+                        let hash = 0;
+                        for (let i = 0; i < normalizedQuery.length; i++) {
+                            hash = normalizedQuery.charCodeAt(i) + ((hash << 5) - hash);
+                        }
+                        const seed1 = Math.abs(hash);
+                        const seed2 = Math.abs(hash >> 3);
+                        
+                        const originKey = airportKeys[seed1 % airportKeys.length];
+                        let destKey = airportKeys[seed2 % airportKeys.length];
+                        if (destKey === originKey) {
+                            destKey = airportKeys[(seed2 + 1) % airportKeys.length];
+                        }
+                        
+                        originObj = window.AIRPORTS[originKey];
+                        destObj = window.AIRPORTS[destKey];
+                        
+                        // Pick random aircraft based on airline code
+                        aircraftType = 'Boeing 737-800';
+                        if (window.AIRLINES[airlineCode] && window.AIRLINES[airlineCode].aircraft) {
+                            const acList = window.AIRLINES[airlineCode].aircraft;
+                            aircraftType = acList[seed1 % acList.length].type;
+                        }
+                        registration = 'VH-VHD';
+                        departureTime = new Date(now + 150 * 60 * 1000); // 2.5 hours in future
+                    }
                     
                     let airlineName = "Charter / Cargo / General Aviation";
                     let airlineColor = "#6b7280";
@@ -764,6 +839,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         airlineColor = al.color;
                         isLight = al.textLight;
                     }
+                    
+                    const distKm = Math.round(simulator.getGreatCircleDistance(originObj.lat, originObj.lon, destObj.lat, destObj.lon));
+                    // Cruise speed around 800 km/h
+                    const durationMs = Math.round((distKm / 800) * 3600 * 1000) + (15 * 60 * 1000); // +15 min taxi
 
                     list.push({
                         id: `DYNAMIC-${query}-${hourEpoch}`,
@@ -773,16 +852,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         airlineCode: airlineCode,
                         airlineColor: airlineColor,
                         airlineTextLight: isLight,
-                        aircraftType: 'Boeing 737-800',
-                        registration: 'VH-VHD',
+                        aircraftType: aircraftType,
+                        registration: registration,
                         maxAltitude: 39000,
                         maxSpeed: 450,
                         origin: originObj,
                         dest: destObj,
-                        distanceKm: 706,
-                        durationMs: 3400000,
+                        distanceKm: distKm,
+                        durationMs: durationMs,
                         departureTime: departureTime,
-                        arrivalTime: new Date(departureTime.getTime() + 3400000),
+                        arrivalTime: new Date(departureTime.getTime() + durationMs),
                         status: 'Scheduled',
                         delayMinutes: 0,
                         progress: 0,
