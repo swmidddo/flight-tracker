@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="style.css?v=5.0">
+    <link rel="stylesheet" href="style.css?v=5.1">
 </head>
 <body>
 
@@ -72,7 +72,10 @@
                             <div id="telemetry-aircraft-model" class="aircraft-model">Boeing 737-800</div>
                         </div>
                     </div>
-                    <button id="btn-close-drawer" class="close-drawer-btn">&times;</button>
+                    <div class="drawer-actions">
+                        <button id="btn-share-telemetry" class="share-drawer-btn" title="Copy Flight Summary">📋 Share</button>
+                        <button id="btn-close-drawer" class="close-drawer-btn">&times;</button>
+                    </div>
                 </div>
 
                 <div class="drawer-content">
@@ -267,9 +270,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Application modules -->
-    <script src="airports.js?v=5.0"></script>
-    <script src="airlines.js?v=5.0"></script>
-    <script src="simulator.js?v=5.0"></script>
-    <script src="app.js?v=5.0"></script>
+    <script src="airports.js?v=5.1"></script>
+    <script src="airlines.js?v=5.1"></script>
+    <script src="simulator.js?v=5.1"></script>
+    <script src="app.js?v=5.1"></script>
 </body>
 </html>

@@ -1249,6 +1249,46 @@ document.addEventListener('DOMContentLoaded', () => {
         bookedBtn.addEventListener('click', () => toggleBadgeFilter('booked'));
     }
 
+    const btnShareTelemetry = document.getElementById('btn-share-telemetry');
+    if (btnShareTelemetry) {
+        btnShareTelemetry.addEventListener('click', () => {
+            if (!selectedFlightId) return;
+            const flights = getActiveRouteList();
+            const flight = flights.find(f => f.id === selectedFlightId);
+            if (!flight) return;
+            
+            const speedKmh = Math.round(flight.currentSpeed * 1.852);
+            let altSection = '';
+            let speedSection = '';
+            
+            if (flight.currentAlt > 0) {
+                altSection = `\nAltitude: ${flight.currentAlt.toLocaleString()} ft`;
+            }
+            if (flight.currentSpeed > 0) {
+                speedSection = ` | Speed: ${flight.currentSpeed} kts (${speedKmh} km/h)`;
+            }
+            
+            const text = `✈️ ${flight.flightNo} (${flight.origin.code} ➔ ${flight.dest.code}) | ${flight.airline}\nStatus: ${flight.status}${altSection}${speedSection}\nTracked live on AeroTrack Pro.`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btnShareTelemetry.innerHTML;
+                btnShareTelemetry.innerHTML = '✔ Copied!';
+                btnShareTelemetry.style.color = 'var(--emerald)';
+                btnShareTelemetry.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                btnShareTelemetry.style.background = 'rgba(16, 185, 129, 0.1)';
+                
+                setTimeout(() => {
+                    btnShareTelemetry.innerHTML = originalText;
+                    btnShareTelemetry.style.color = '';
+                    btnShareTelemetry.style.borderColor = '';
+                    btnShareTelemetry.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        });
+    }
+
     document.getElementById('btn-close-drawer').addEventListener('click', () => {
         selectedFlightId = null;
         updateDashboard(getActiveRouteList());
