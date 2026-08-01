@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Global State Variables
     let selectedFlightId = null;
     let selectedAirportCode = null;
+    let selectedAirportFidsTab = 'departures';
 
     // Load persisted preferences safely
     let searchFilter = safeStorage.getItem('pref_searchFilter', '');
@@ -279,7 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (originState !== stateFilter && destState !== stateFilter) return false;
             }
 
-            if (selectedAirportCode && f.origin.code !== selectedAirportCode) return false;
+            if (selectedAirportCode) {
+                if (selectedAirportFidsTab === 'departures' && f.origin.code !== selectedAirportCode) return false;
+                if (selectedAirportFidsTab === 'arrivals' && f.dest.code !== selectedAirportCode) return false;
+            }
 
             if (searchFilter) {
                 const query = searchFilter.toLowerCase().trim();
@@ -472,7 +476,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const banner = document.getElementById('airport-filter-header');
         if (selectedAirportCode) {
+            const ap = window.AIRPORTS[selectedAirportCode];
             document.getElementById('lbl-airport-code').textContent = selectedAirportCode;
+            document.getElementById('lbl-airport-name').textContent = ap ? ap.name : 'Selected Airport';
             banner.style.display = 'flex';
         } else {
             banner.style.display = 'none';
@@ -766,6 +772,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        if (!selectedAirportCode) {
+            selectedAirportFidsTab = 'departures';
+            const btnFidsDeps = document.getElementById('btn-fids-departures');
+            const btnFidsArrs = document.getElementById('btn-fids-arrivals');
+            if (btnFidsDeps && btnFidsArrs) {
+                btnFidsDeps.classList.add('active');
+                btnFidsArrs.classList.remove('active');
+            }
+        }
+
         Object.keys(airportMarkers).forEach(c => {
             const m = airportMarkers[c];
             const ap = window.AIRPORTS[c];
@@ -777,8 +793,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="airport-marker-dot"></div>
                     <div class="airport-label">${ap.code}</div>
                 `,
-                iconSize: [8, 8],
-                iconAnchor: [4, 4]
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
             }));
         });
 
@@ -812,8 +828,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         list.forEach(f => {
             if (f.status === 'Landed') return;
-            if (f.origin.code === selectedAirportCode) {
+            if (selectedAirportFidsTab === 'departures' && f.origin.code === selectedAirportCode) {
                 destinations.add(f.dest.code);
+            } else if (selectedAirportFidsTab === 'arrivals' && f.dest.code === selectedAirportCode) {
+                destinations.add(f.origin.code);
             }
         });
 
@@ -1117,6 +1135,29 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedAirportCode = null;
         selectAirport(null);
     });
+
+    const btnFidsDeps = document.getElementById('btn-fids-departures');
+    const btnFidsArrs = document.getElementById('btn-fids-arrivals');
+
+    if (btnFidsDeps && btnFidsArrs) {
+        btnFidsDeps.addEventListener('click', () => {
+            if (selectedAirportFidsTab === 'departures') return;
+            selectedAirportFidsTab = 'departures';
+            btnFidsDeps.classList.add('active');
+            btnFidsArrs.classList.remove('active');
+            updateDashboard(getActiveRouteList());
+            drawAirportDestinationConnections();
+        });
+
+        btnFidsArrs.addEventListener('click', () => {
+            if (selectedAirportFidsTab === 'arrivals') return;
+            selectedAirportFidsTab = 'arrivals';
+            btnFidsArrs.classList.add('active');
+            btnFidsDeps.classList.remove('active');
+            updateDashboard(getActiveRouteList());
+            drawAirportDestinationConnections();
+        });
+    }
 
     document.getElementById('btn-toggle-intl').addEventListener('click', () => {
         hideInternational = !hideInternational;

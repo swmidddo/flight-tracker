@@ -690,6 +690,38 @@ body.mobile-optimized .plane-icon-div svg {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
+}
+
+.fids-toggle-row {
+    display: flex;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.fids-tab-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fids-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.fids-tab-btn.active {
+    background: var(--cyan);
+    color: #020617 !important;
 }
 
 .airport-filter-header .info {
