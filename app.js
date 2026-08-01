@@ -919,16 +919,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // 12. Input Event Handlers & Autocomplete Suggestions
     const searchInput = document.getElementById('search-input');
     const suggestionsDiv = document.getElementById('search-suggestions');
+    const btnClearSearch = document.getElementById('btn-clear-search');
     // selectAirline is already defined at the top
     const selectType = document.getElementById('select-type');
     const selectState = document.getElementById('select-state');
     const selectStatus = document.getElementById('select-status');
+
+    function toggleClearSearchButton() {
+        if (!btnClearSearch || !searchInput) return;
+        btnClearSearch.style.display = searchInput.value ? 'block' : 'none';
+    }
+
+    if (btnClearSearch) {
+        btnClearSearch.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchFilter = '';
+                savePreferences();
+                updateDashboard(getActiveRouteList());
+                renderSearchSuggestions();
+                toggleClearSearchButton();
+                searchInput.focus();
+            }
+        });
+    }
 
     searchInput.addEventListener('input', (e) => {
         searchFilter = e.target.value;
         savePreferences();
         updateDashboard(getActiveRouteList());
         renderSearchSuggestions();
+        toggleClearSearchButton();
     });
 
     document.addEventListener('click', (e) => {
@@ -1044,6 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 savePreferences();
                 suggestionsDiv.style.display = 'none';
                 suggestionsDiv.innerHTML = '';
+                toggleClearSearchButton();
             });
         });
     }
@@ -1782,7 +1804,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 17. Load and Apply Persisted Preferences
-    if (searchInput) searchInput.value = searchFilter;
+    if (searchInput) {
+        searchInput.value = searchFilter;
+        toggleClearSearchButton();
+    }
     if (selectAirline) selectAirline.value = airlineFilter;
     if (selectType) selectType.value = typeFilter;
     if (selectState) selectState.value = stateFilter;

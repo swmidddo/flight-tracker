@@ -488,7 +488,7 @@ body:not(.light-mode) .leaflet-tile {
     background: rgba(255,255,255,0.025);
     border: 1px solid var(--border-glass);
     border-radius: 8px;
-    padding: 10px 12px 10px 38px;
+    padding: 10px 32px 10px 38px;
     color: var(--text-primary);
     font-size: 0.85rem;
     outline: none;
@@ -499,6 +499,27 @@ body:not(.light-mode) .leaflet-tile {
     border-color: var(--cyan);
     box-shadow: 0 0 10px var(--cyan-glow);
     background: rgba(255,255,255,0.05);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.2s ease;
+    z-index: 10;
+}
+
+.clear-search-btn:hover {
+    color: var(--rose);
 }
 
 .selectors-row {
