@@ -1602,3 +1602,15 @@ body.mobile-optimized .plane-icon-div svg {
         opacity: 1;
     }
 }
+
+/* Flowing dashed projected route line style and animation */
+.flowing-route-line {
+    stroke-dasharray: 6, 8;
+    animation: route-flow-dash 1.2s linear infinite;
+}
+
+@keyframes route-flow-dash {
+    to {
+        stroke-dashoffset: -28;
+    }
+}

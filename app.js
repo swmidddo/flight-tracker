@@ -476,8 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
             routeDashedLine = L.polyline([startLoc, endLoc], {
                 color: flight.airlineColor,
                 weight: 1.5,
-                dashArray: '5, 8',
-                opacity: 0.35
+                className: 'flowing-route-line',
+                opacity: 0.45
             }).addTo(map);
         }
 
