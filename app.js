@@ -788,12 +788,17 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedFlightId = id;
             const f = list.find(flight => flight.id === id);
             if (f) {
-                if (f.origin.lat !== null && f.dest.lat !== null) {
-                    const bounds = L.latLngBounds(
-                        [f.origin.lat, f.origin.lon],
-                        [f.dest.lat, f.dest.lon]
-                    );
-                    map.fitBounds(bounds, { padding: [100, 100], maxZoom: 6 });
+                const points = [[f.currentLat, f.currentLon]];
+                if (f.origin && f.origin.lat !== null && f.origin.lon !== null) {
+                    points.push([f.origin.lat, f.origin.lon]);
+                }
+                if (f.dest && f.dest.lat !== null && f.dest.lon !== null) {
+                    points.push([f.dest.lat, f.dest.lon]);
+                }
+                
+                if (points.length > 1) {
+                    const bounds = L.latLngBounds(points);
+                    map.fitBounds(bounds, { padding: [80, 80], maxZoom: 7 });
                 } else {
                     map.setView([f.currentLat, f.currentLon], 6);
                 }
