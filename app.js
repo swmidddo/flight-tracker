@@ -167,8 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="airport-marker-dot"></div>
                 <div class="airport-label">${airport.code}</div>
             `,
-            iconSize: [8, 8],
-            iconAnchor: [4, 4]
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
         });
 
         const marker = L.marker([airport.lat, airport.lon], { icon: customIcon })
