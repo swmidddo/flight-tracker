@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="style.css?v=4.1">
+    <link rel="stylesheet" href="style.css?v=4.2">
 </head>
 <body>
 
@@ -141,7 +141,10 @@
                 <div class="logo-area">
                     <span class="radar-pulse">🛰</span>
                     <h2>AEROTRACK <span class="neon-text">PRO</span></h2>
-                    <div id="live-indicator" class="live-badge">Live Radar</div>
+                    <div id="live-indicator" class="live-badge">
+                        <span class="live-dot" style="background: var(--cyan)"></span>
+                        <span>Live Radar</span>
+                    </div>
                 </div>
                 <button id="btn-theme-toggle" class="theme-toggle-btn" title="Toggle Light/Dark Theme">🌙</button>
             </div>
@@ -263,9 +266,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Application modules -->
-    <script src="airports.js?v=4.1"></script>
-    <script src="airlines.js?v=4.1"></script>
-    <script src="simulator.js?v=4.1"></script>
-    <script src="app.js?v=4.1"></script>
+    <script src="airports.js?v=4.2"></script>
+    <script src="airlines.js?v=4.2"></script>
+    <script src="simulator.js?v=4.2"></script>
+    <script src="app.js?v=4.2"></script>
 </body>
 </html>

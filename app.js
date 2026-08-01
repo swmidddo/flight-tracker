@@ -1595,22 +1595,50 @@ document.addEventListener('DOMContentLoaded', () => {
         return [...flights, ...bookedFlights];
     }
 
+    function updateLiveIndicator(text, type) {
+        const indicator = document.getElementById('live-indicator');
+        if (!indicator) return;
+        
+        let dotColor = 'var(--cyan)';
+        let badgeBorder = 'rgba(6, 182, 212, 0.3)';
+        let badgeBg = 'rgba(6, 182, 212, 0.05)';
+        let textColor = 'var(--cyan)';
+        let isFetchingClass = '';
+        
+        if (type === 'error') {
+            dotColor = 'var(--rose)';
+            badgeBorder = 'rgba(244, 63, 94, 0.3)';
+            badgeBg = 'rgba(244, 63, 94, 0.1)';
+            textColor = 'var(--rose)';
+        } else if (type === 'offline') {
+            dotColor = 'var(--text-muted)';
+            badgeBorder = 'rgba(148, 163, 184, 0.2)';
+            badgeBg = 'rgba(148, 163, 184, 0.05)';
+            textColor = 'var(--text-muted)';
+        } else if (type === 'connecting') {
+            dotColor = 'var(--amber)';
+            badgeBorder = 'rgba(245, 158, 11, 0.3)';
+            badgeBg = 'rgba(245, 158, 11, 0.1)';
+            textColor = 'var(--amber)';
+            isFetchingClass = 'fetching';
+        }
+        
+        indicator.innerHTML = `
+            <span class="live-dot ${isFetchingClass}" style="background: ${dotColor}"></span>
+            <span style="color: ${textColor}; font-weight: 700;">${text}</span>
+        `;
+        indicator.style.borderColor = badgeBorder;
+        indicator.style.background = badgeBg;
+    }
+
     function activateSimulationFallback(errMessage) {
         console.warn(`Connection to live feed server lost. Reason: ${errMessage}`);
         fetchFailCount++;
         
-        const indicator = document.getElementById('live-indicator');
-        if (indicator) {
-            indicator.className = "live-badge";
-            indicator.style.borderColor = "var(--rose)";
-            indicator.style.color = "var(--rose)";
-            indicator.style.background = "rgba(244, 63, 94, 0.1)";
-            
-            if (lastLiveFetch === 0) {
-                indicator.textContent = "Connecting...";
-            } else {
-                indicator.textContent = "Offline / Retrying";
-            }
+        if (lastLiveFetch === 0) {
+            updateLiveIndicator("Connecting...", "connecting");
+        } else {
+            updateLiveIndicator("Offline / Retrying", "error");
         }
 
         const warningBanner = document.getElementById('warning-banner');
@@ -1634,12 +1662,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const bounds = '-10,-45,110,155';
         const fr24Url = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${bounds}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=1&estimated=1&maxage=14400&gliders=1&stats=1`;
 
-        const indicator = document.getElementById('live-indicator');
-        if (indicator && lastLiveFetch === 0) {
-            indicator.textContent = fetchFailCount > 0 ? "Waking up..." : "Connecting...";
-            indicator.style.borderColor = "var(--cyan)";
-            indicator.style.color = "var(--cyan)";
-            indicator.style.background = "rgba(6, 182, 212, 0.1)";
+        if (lastLiveFetch === 0) {
+            updateLiveIndicator(fetchFailCount > 0 ? "Waking up..." : "Connecting...", "connecting");
         }
 
         fetchWithTimeout('/api/live-flights', {}, 20000)
@@ -1690,14 +1714,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         lastLiveFetch = Date.now();
 
-        const indicator = document.getElementById('live-indicator');
-        if (indicator) {
-            indicator.className = "live-badge";
-            indicator.style.borderColor = "";
-            indicator.style.color = "";
-            indicator.style.background = "";
-            indicator.textContent = "Live Radar";
-        }
+        updateLiveIndicator("Live Radar", "success");
 
         // Accumulate history for live flights from the previous liveFlights array
         const prevLiveMap = {};

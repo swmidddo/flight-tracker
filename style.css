@@ -1538,3 +1538,46 @@ body.mobile-optimized .plane-icon-div svg {
         font-size: 0.7rem;
     }
 }
+
+/* Pulsing Live Status Dot */
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    animation: live-pulse-glow 2s infinite ease-in-out;
+    transition: background-color 0.3s ease;
+}
+
+.live-dot.fetching {
+    animation: live-fetching-pulse 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes live-pulse-glow {
+    0% {
+        transform: scale(0.85);
+        opacity: 0.5;
+        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.5);
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+        box-shadow: 0 0 0 6px rgba(6, 182, 212, 0);
+    }
+    100% {
+        transform: scale(0.85);
+        opacity: 0.5;
+        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
+    }
+}
+
+@keyframes live-fetching-pulse {
+    from {
+        transform: scale(0.8);
+        opacity: 0.4;
+    }
+    to {
+        transform: scale(1.25);
+        opacity: 1;
+    }
+}
