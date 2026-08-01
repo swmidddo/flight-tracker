@@ -819,31 +819,133 @@ document.addEventListener('DOMContentLoaded', () => {
                             departureTime = nextDate;
                         }
                     } else {
-                        // Generate deterministic route using hashing
-                        const airportKeys = Object.keys(window.AIRPORTS).filter(k => window.AIRPORTS[k].state !== 'INTL');
+                        // Network & Fleet Heuristics Engine
+                        const hubsCapitals = ['SYD', 'MEL', 'BNE', 'ADL', 'PER'];
+                        const regionalSpokes = ['EMD', 'MOV', 'WGA', 'ABX', 'CBR', 'CNS', 'HBA', 'MQL', 'PQQ', 'DPO', 'LST', 'MKY', 'TSV'];
+                        
+                        // Seed hash from flight query to keep route consistent
                         let hash = 0;
                         for (let i = 0; i < normalizedQuery.length; i++) {
                             hash = normalizedQuery.charCodeAt(i) + ((hash << 5) - hash);
                         }
-                        const seed1 = Math.abs(hash);
-                        const seed2 = Math.abs(hash >> 3);
+                        const seed = Math.abs(hash);
                         
-                        const originKey = airportKeys[seed1 % airportKeys.length];
-                        let destKey = airportKeys[seed2 % airportKeys.length];
-                        if (destKey === originKey) {
-                            destKey = airportKeys[(seed2 + 1) % airportKeys.length];
+                        // Parse flight number
+                        const match = normalizedQuery.match(/^([A-Z]{2,3})(\d{1,4})$/);
+                        const carrier = match ? match[1] : airlineCode;
+                        const number = match ? parseInt(match[2], 10) : 100;
+                        
+                        if (carrier === 'QF' || carrier === 'QFA') {
+                            if (number >= 1000 && number < 3000) {
+                                // QantasLink regional turboprop
+                                aircraftType = 'Dash 8 Q400';
+                                registration = 'VH-QO' + String.fromCharCode(65 + (seed % 26)) + String.fromCharCode(65 + ((seed + 1) % 26));
+                                
+                                const spoke = regionalSpokes[seed % regionalSpokes.length];
+                                const hub = hubsCapitals[(seed + 2) % hubsCapitals.length];
+                                if (seed % 2 === 0) {
+                                    originObj = window.AIRPORTS[spoke] || window.AIRPORTS['EMD'];
+                                    destObj = window.AIRPORTS[hub] || window.AIRPORTS['BNE'];
+                                } else {
+                                    originObj = window.AIRPORTS[hub] || window.AIRPORTS['BNE'];
+                                    destObj = window.AIRPORTS[spoke] || window.AIRPORTS['EMD'];
+                                }
+                            } else {
+                                // Qantas Mainline jet
+                                aircraftType = seed % 4 === 0 ? 'Airbus A330-200' : 'Boeing 737-800';
+                                registration = aircraftType.startsWith('Airbus') ? 
+                                    'VH-EB' + String.fromCharCode(65 + (seed % 26)) : 
+                                    'VH-XZ' + String.fromCharCode(65 + (seed % 26));
+                                    
+                                const hub1 = hubsCapitals[seed % hubsCapitals.length];
+                                let hub2 = hubsCapitals[(seed + 3) % hubsCapitals.length];
+                                if (hub1 === hub2) hub2 = hubsCapitals[(seed + 1) % hubsCapitals.length];
+                                
+                                originObj = window.AIRPORTS[hub1];
+                                destObj = window.AIRPORTS[hub2];
+                            }
+                        } else if (carrier === 'VA' || carrier === 'VOZ') {
+                            // Virgin Australia trunk or minor holiday route
+                            aircraftType = 'Boeing 737-800';
+                            registration = 'VH-VU' + String.fromCharCode(65 + (seed % 26));
+                            
+                            const cities = [...hubsCapitals, 'OOL', 'CNS', 'HBA', 'TSV'];
+                            const city1 = cities[seed % cities.length];
+                            let city2 = cities[(seed + 4) % cities.length];
+                            if (city1 === city2) city2 = cities[(seed + 1) % cities.length];
+                            
+                            originObj = window.AIRPORTS[city1];
+                            destObj = window.AIRPORTS[city2];
+                        } else if (carrier === 'JQ' || carrier === 'JST') {
+                            // Jetstar budget holiday route
+                            aircraftType = 'Airbus A320';
+                            registration = 'VH-VQ' + String.fromCharCode(65 + (seed % 26));
+                            
+                            const leisureDest = ['SYD', 'MEL', 'BNE', 'OOL', 'CNS', 'HBA', 'MCY', 'TSV', 'AVV'];
+                            const city1 = leisureDest[seed % leisureDest.length];
+                            let city2 = leisureDest[(seed + 2) % leisureDest.length];
+                            if (city1 === city2) city2 = leisureDest[(seed + 1) % leisureDest.length];
+                            
+                            originObj = window.AIRPORTS[city1];
+                            destObj = window.AIRPORTS[city2];
+                        } else if (carrier === 'ZL' || carrier === 'RXA') {
+                            if (number < 1000) {
+                                // Rex Regional SAAB turboprop
+                                aircraftType = 'Saab 340B';
+                                registration = 'VH-ZX' + String.fromCharCode(65 + (seed % 26));
+                                
+                                const spoke = regionalSpokes[seed % regionalSpokes.length];
+                                const hub = hubsCapitals[(seed + 1) % hubsCapitals.length];
+                                if (seed % 2 === 0) {
+                                    originObj = window.AIRPORTS[spoke] || window.AIRPORTS['WGA'];
+                                    destObj = window.AIRPORTS[hub] || window.AIRPORTS['SYD'];
+                                } else {
+                                    originObj = window.AIRPORTS[hub] || window.AIRPORTS['SYD'];
+                                    destObj = window.AIRPORTS[spoke] || window.AIRPORTS['WGA'];
+                                }
+                            } else {
+                                // Rex mainline Jet
+                                aircraftType = 'Boeing 737-800';
+                                registration = 'VH-8RP';
+                                
+                                const jetHubs = ['SYD', 'MEL', 'BNE', 'OOL', 'ADL'];
+                                const city1 = jetHubs[seed % jetHubs.length];
+                                let city2 = jetHubs[(seed + 2) % jetHubs.length];
+                                if (city1 === city2) city2 = jetHubs[(seed + 1) % jetHubs.length];
+                                
+                                originObj = window.AIRPORTS[city1];
+                                destObj = window.AIRPORTS[city2];
+                            }
+                        } else if (carrier === 'QQ' || carrier === 'UTY') {
+                            // Alliance FIFO / Mining Charter
+                            aircraftType = seed % 2 === 0 ? 'Fokker 100' : 'Embraer E190';
+                            registration = aircraftType === 'Fokker 100' ? 
+                                'VH-FK' + String.fromCharCode(65 + (seed % 26)) : 
+                                'VH-XQ' + String.fromCharCode(65 + (seed % 26));
+                                
+                            const miningSpokes = ['MOV', 'ISA', 'EMD', 'MKY', 'TSV'];
+                            const hub = 'BNE'; // Alliance's main FIFO hub
+                            
+                            if (seed % 2 === 0) {
+                                originObj = window.AIRPORTS[miningSpokes[seed % miningSpokes.length]] || window.AIRPORTS['MOV'];
+                                destObj = window.AIRPORTS[hub];
+                            } else {
+                                originObj = window.AIRPORTS[hub];
+                                destObj = window.AIRPORTS[miningSpokes[seed % miningSpokes.length]] || window.AIRPORTS['MOV'];
+                            }
+                        } else {
+                            // Generic fallback
+                            const airportKeys = Object.keys(window.AIRPORTS).filter(k => window.AIRPORTS[k].state !== 'INTL');
+                            const originKey = airportKeys[seed % airportKeys.length];
+                            let destKey = airportKeys[(seed + 3) % airportKeys.length];
+                            if (destKey === originKey) destKey = airportKeys[(seed + 1) % airportKeys.length];
+                            
+                            originObj = window.AIRPORTS[originKey];
+                            destObj = window.AIRPORTS[destKey];
+                            aircraftType = 'Boeing 737-800';
+                            registration = 'VH-VHD';
                         }
                         
-                        originObj = window.AIRPORTS[originKey];
-                        destObj = window.AIRPORTS[destKey];
-                        
-                        // Pick random aircraft based on airline code
-                        aircraftType = 'Boeing 737-800';
-                        if (window.AIRLINES[airlineCode] && window.AIRLINES[airlineCode].aircraft) {
-                            const acList = window.AIRLINES[airlineCode].aircraft;
-                            aircraftType = acList[seed1 % acList.length].type;
-                        }
-                        registration = 'VH-VHD';
                         departureTime = new Date(now + 150 * 60 * 1000); // 2.5 hours in future
                     }
                     
