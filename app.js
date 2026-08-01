@@ -565,6 +565,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const knownCarriers = ['QF', 'VA', 'JQ', 'ZL'];
                 const badgeStyleClass = knownCarriers.includes(carrierCode) ? carrierCode.toLowerCase() : 'other';
 
+                let telemetryLine = '';
+                if (['En Route', 'Climbing', 'Descending', 'Delayed'].includes(f.status) && f.currentAltitude > 0) {
+                    const altStr = f.currentAltitude.toLocaleString();
+                    const speedKmh = Math.round(f.currentSpeed * 1.852);
+                    telemetryLine = `
+                        <div class="card-telemetry-row">
+                            <span>✈ Alt: <strong>${altStr} ft</strong></span>
+                            <span>Speed: <strong>${speedKmh} km/h</strong></span>
+                        </div>
+                    `;
+                }
+
                 cardsHtml += `
                     <div class="flight-card ${isSelected ? 'selected' : ''}" style="--airline-color: ${f.airlineColor}" data-id="${f.id}">
                         <div class="card-top">
@@ -587,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="card-schedule">${depTime} ➔ ${arrTime}${delayText}</span>
                             <span class="status-tag ${badgeClass}">${f.status}</span>
                         </div>
+                        ${telemetryLine}
                         ${['En Route', 'Climbing', 'Descending', 'Delayed'].includes(f.status) ? `
                             <div class="progress-mini" style="width: ${Math.round(f.progress * 100)}%"></div>
                         ` : ''}
