@@ -124,17 +124,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileOptimized) return;
         
         const zoom = map.getZoom();
-        // Dynamic zoom threshold: on mobile (screens <= 900px), show all airports at zoom >= 6.
-        // On desktop/PC, show all airports at zoom >= 7 (since wider displays show a much larger region at lower zoom levels).
-        const threshold = (window.innerWidth <= 900) ? 6 : 7;
         
+        // Tiered Level-of-Detail Classification
+        const MEDIUM_REGIONAL = new Set([
+            'OOL', 'CNS', 'TSV', 'MKY', 'ROK', 'NTL', 'LST', 'ASP', 'BME', 'PHE', 'KTA', 'AVV', 'MCY', 'HBA', 'CBR', 'DRW', 'ADL', 'PER', 'BNE', 'MEL', 'SYD'
+        ]);
+
         Object.keys(airportMarkers).forEach(code => {
             const marker = airportMarkers[code];
             const airport = window.AIRPORTS[code];
             const isMajor = isMajorAirport(code, airport);
+            const isMedium = MEDIUM_REGIONAL.has(code) || (airport && airport.state === 'INTL');
+
+            let shouldBeVisible = false;
+            if (code === selectedAirportCode) {
+                shouldBeVisible = true;
+            } else if (isMajor) {
+                shouldBeVisible = true; // Always show capitals
+            } else if (isMedium) {
+                shouldBeVisible = (zoom >= 5); // Show regional hubs/international at zoom 5+
+            } else {
+                shouldBeVisible = (zoom >= 8); // Show small regional strips only at zoom 8+
+            }
             
-            // Show all airports if zoomed in past threshold, otherwise show only capital city ones (or the selected airport)
-            const shouldBeVisible = (zoom >= threshold) || isMajor || (code === selectedAirportCode);
             const isCurrentlyOnMap = map.hasLayer(marker);
             
             if (shouldBeVisible && !isCurrentlyOnMap) {
