@@ -1637,3 +1637,19 @@ body.mobile-optimized .plane-icon-div svg {
 .airline-logo-badge.jq { background: #ff5722; color: #020617 !important; } /* Jetstar Orange */
 .airline-logo-badge.zl { background: #0056b3; } /* Rex Blue */
 .airline-logo-badge.other { background: #475569; } /* Default Slate */
+
+/* Custom Leaflet Scale Control styling */
+.leaflet-control-scale-line {
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--border-glass) !important;
+    border-top: none !important;
+    color: var(--text-muted) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
+    padding: 2px 6px !important;
+    border-radius: 0 0 4px 4px;
+}

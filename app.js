@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Top right zoom controls
     L.control.zoom({ position: 'topright' }).addTo(map);
 
+    // Bottom right scale indicator
+    L.control.scale({ position: 'bottomright', imperial: false }).addTo(map);
+
     const roadmapTile = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en', {
         maxZoom: 20,
         minZoom: 3,
