@@ -1925,8 +1925,7 @@ document.addEventListener('DOMContentLoaded', () => {
         liveFlights = flights;
 
         tickUserFlights();
-        const combined = [...userFlights, ...liveFlights];
-        updateDashboard(combined);
+        updateDashboard(getActiveRouteList());
     }
 
     // 15. Setup Event Intervals
@@ -1936,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchLiveFlights();
         } else {
             tickUserFlights();
-            updateDashboard([...userFlights, ...liveFlights]);
+            updateDashboard(getActiveRouteList());
         }
     }, 1000);
 
