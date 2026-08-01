@@ -1488,7 +1488,7 @@ body.mobile-optimized .plane-icon-div svg {
 /* Map Theme Selector Control Overlay */
 .map-theme-control {
     position: absolute;
-    bottom: 20px;
+    top: 96px;
     left: 20px;
     z-index: 1000;
     display: flex;
@@ -1528,8 +1528,9 @@ body.mobile-optimized .plane-icon-div svg {
 
 @media (max-width: 900px) {
     .map-theme-control {
-        bottom: 85px;
-        left: 10px;
+        top: 96px;
+        left: 20px;
+        bottom: auto;
         padding: 2px;
     }
     .theme-btn {
