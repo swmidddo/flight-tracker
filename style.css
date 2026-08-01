@@ -1614,3 +1614,26 @@ body.mobile-optimized .plane-icon-div svg {
         stroke-dashoffset: -28;
     }
 }
+
+/* Airline Carrier Logo Badges */
+.airline-logo-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 18px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-right: 6px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.airline-logo-badge.qf { background: #e02424; } /* Qantas Red */
+.airline-logo-badge.va { background: #d01c8b; } /* Virgin Purple */
+.airline-logo-badge.jq { background: #ff5722; color: #020617 !important; } /* Jetstar Orange */
+.airline-logo-badge.zl { background: #0056b3; } /* Rex Blue */
+.airline-logo-badge.other { background: #475569; } /* Default Slate */

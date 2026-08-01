@@ -558,9 +558,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     delayText = `<span style="color: var(--amber); font-weight: 700; margin-left: 5px;">(+${f.delayMinutes}m)</span>`;
                 }
 
+                const carrierCode = (f.flightNo || '??').substring(0, 2).toUpperCase();
+                const knownCarriers = ['QF', 'VA', 'JQ', 'ZL'];
+                const badgeStyleClass = knownCarriers.includes(carrierCode) ? carrierCode.toLowerCase() : 'other';
+
                 cardsHtml += `
                     <div class="flight-card ${isSelected ? 'selected' : ''}" style="--airline-color: ${f.airlineColor}" data-id="${f.id}">
                         <div class="card-top">
+                            <span class="airline-logo-badge ${badgeStyleClass}">${carrierCode}</span>
                             <span class="flight-no">${f.flightNo}</span>
                             <span class="airline-name">${f.airline}</span>
                         </div>
