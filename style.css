@@ -1653,6 +1653,12 @@ body.mobile-optimized .plane-icon-div svg {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
+/* Shift bottom-right Leaflet controls away from screen borders to prevent clipping */
+.leaflet-bottom.leaflet-right {
+    right: 12px !important;
+    bottom: 12px !important;
+}
+
 /* Real-time telemetry row inside flight cards */
 .card-telemetry-row {
     font-size: 0.72rem;
