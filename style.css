@@ -1196,8 +1196,8 @@ body.mobile-optimized .plane-icon-div svg {
 
 /* Leaflet Map Airport Markers Custom styles */
 .airport-marker {
-    background: transparent;
-    border: none;
+    background: transparent !important;
+    border: none !important;
 }
 
 .airport-marker-dot {
@@ -1431,4 +1431,10 @@ body.mobile-optimized .plane-icon-div svg {
 .leaflet-popup-content {
     font-size: 0.8rem !important;
     line-height: 1.4 !important;
+}
+
+/* Global override to strip default Leaflet divIcon styles */
+.leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
 }
