@@ -122,9 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateAirportMarkersVisibility() {
-        if (mobileOptimized) return;
-        
         const zoom = map.getZoom();
+        const isMobile = window.innerWidth <= 900;
+        const mediumThreshold = isMobile ? 6 : 5;
+        const smallThreshold = isMobile ? 9 : 8;
         
         // Tiered Level-of-Detail Classification
         const MEDIUM_REGIONAL = new Set([
@@ -142,10 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 shouldBeVisible = true;
             } else if (isMajor) {
                 shouldBeVisible = true; // Always show capitals
-            } else if (isMedium) {
-                shouldBeVisible = (zoom >= 5); // Show regional hubs/international at zoom 5+
-            } else {
-                shouldBeVisible = (zoom >= 8); // Show small regional strips only at zoom 8+
+            } else if (!mobileOptimized) {
+                if (isMedium) {
+                    shouldBeVisible = (zoom >= mediumThreshold); // Show medium/international hubs at zoom 5+ (6+ on mobile)
+                } else {
+                    shouldBeVisible = (zoom >= smallThreshold); // Show small regional strips only at zoom 8+ (9+ on mobile)
+                }
             }
             
             const isCurrentlyOnMap = map.hasLayer(marker);
@@ -807,9 +810,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.querySelector('.dashboard-sidebar');
             const toggleBtn = document.getElementById('btn-sidebar-toggle');
             if (sidebar && toggleBtn) {
-                sidebar.classList.remove('sidebar-open');
-                toggleBtn.classList.remove('sidebar-open');
-                toggleBtn.innerHTML = '📋';
+                sidebar.classList.add('sidebar-open');
+                toggleBtn.classList.add('sidebar-open');
+                toggleBtn.innerHTML = '✕';
             }
         }
     }
@@ -971,8 +974,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     selectFlight(id);
                 } else if (type === 'airport') {
-                    searchInput.value = id;
-                    searchFilter = id;
+                    searchInput.value = '';
+                    searchFilter = '';
                     selectAirport(id);
                 } else if (type === 'airline') {
                     selectAirline.value = id;
