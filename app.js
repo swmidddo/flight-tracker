@@ -572,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     telemetryLine = `
                         <div class="card-telemetry-row">
                             <span>✈ Alt: <strong>${altStr} ft</strong></span>
-                            <span>Speed: <strong>${speedKmh} km/h</strong></span>
+                            <span>Speed: <strong>${f.currentSpeed} kts (${speedKmh} km/h)</strong></span>
                         </div>
                     `;
                 }
