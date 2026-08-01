@@ -566,8 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const badgeStyleClass = knownCarriers.includes(carrierCode) ? carrierCode.toLowerCase() : 'other';
 
                 let telemetryLine = '';
-                if (['En Route', 'Climbing', 'Descending', 'Delayed'].includes(f.status) && f.currentAltitude > 0) {
-                    const altStr = f.currentAltitude.toLocaleString();
+                if (['En Route', 'Climbing', 'Descending', 'Delayed'].includes(f.status) && f.currentAlt > 0) {
+                    const altStr = f.currentAlt.toLocaleString();
                     const speedKmh = Math.round(f.currentSpeed * 1.852);
                     telemetryLine = `
                         <div class="card-telemetry-row">
