@@ -46,8 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (themeBtn) themeBtn.textContent = '☀️';
     }
 
-    const googleTileUrl = 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en';
-
     // 2. Map Initialization
     const map = L.map('map', {
         center: [-27.0, 133.0],
@@ -59,13 +57,64 @@ document.addEventListener('DOMContentLoaded', () => {
     // Top right zoom controls
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Google Maps base tiles
-    const baseTileLayer = L.tileLayer(googleTileUrl, {
+    const roadmapTile = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en', {
         maxZoom: 20,
         minZoom: 3,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         attribution: '&copy; Google Maps'
-    }).addTo(map);
+    });
+
+    const darkTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        minZoom: 3,
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    });
+
+    const satelliteTile = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        minZoom: 3,
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    const basemaps = {
+        roadmap: roadmapTile,
+        dark: darkTile,
+        satellite: satelliteTile
+    };
+
+    let activeMapTheme = safeStorage.getItem('pref_mapTheme', 'roadmap');
+    if (!basemaps[activeMapTheme]) {
+        activeMapTheme = 'roadmap';
+    }
+
+    let activeTileLayer = basemaps[activeMapTheme];
+    activeTileLayer.addTo(map);
+
+    function changeMapTheme(theme) {
+        if (theme === activeMapTheme) return;
+        
+        map.removeLayer(activeTileLayer);
+        activeTileLayer = basemaps[theme];
+        activeTileLayer.addTo(map);
+        
+        activeMapTheme = theme;
+        safeStorage.setItem('pref_mapTheme', theme);
+        
+        // Sync active class on buttons
+        const btnRoad = document.getElementById('btn-theme-roadmap');
+        const btnDark = document.getElementById('btn-theme-dark');
+        const btnSat = document.getElementById('btn-theme-satellite');
+        
+        if (btnRoad && btnDark && btnSat) {
+            btnRoad.classList.remove('active');
+            btnDark.classList.remove('active');
+            btnSat.classList.remove('active');
+            
+            if (theme === 'roadmap') btnRoad.classList.add('active');
+            else if (theme === 'dark') btnDark.classList.add('active');
+            else if (theme === 'satellite') btnSat.classList.add('active');
+        }
+    }
 
     // 2. Global State Variables
     let selectedFlightId = null;
@@ -1729,6 +1778,25 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('mobile-optimized');
         }
     }
+    // Set active map theme button
+    const btnRoad = document.getElementById('btn-theme-roadmap');
+    const btnDark = document.getElementById('btn-theme-dark');
+    const btnSat = document.getElementById('btn-theme-satellite');
+    
+    if (btnRoad && btnDark && btnSat) {
+        btnRoad.classList.remove('active');
+        btnDark.classList.remove('active');
+        btnSat.classList.remove('active');
+        
+        if (activeMapTheme === 'roadmap') btnRoad.classList.add('active');
+        else if (activeMapTheme === 'dark') btnDark.classList.add('active');
+        else if (activeMapTheme === 'satellite') btnSat.classList.add('active');
+
+        btnRoad.addEventListener('click', () => changeMapTheme('roadmap'));
+        btnDark.addEventListener('click', () => changeMapTheme('dark'));
+        btnSat.addEventListener('click', () => changeMapTheme('satellite'));
+    }
+
     if (weatherRadarActive) {
         setWeatherRadarState(true);
     }

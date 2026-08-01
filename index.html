@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
     <!-- Custom CSS styling -->
-    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="stylesheet" href="style.css?v=4.1">
 </head>
 <body>
 
@@ -38,6 +38,13 @@
                     <span class="label">Ground:</span>
                     <strong id="overlay-ground-count" class="val text-muted">0</strong>
                 </div>
+            </div>
+
+            <!-- Map Theme Selector Overlay -->
+            <div class="map-theme-control">
+                <button id="btn-theme-roadmap" class="theme-btn active" title="Road Map">Road</button>
+                <button id="btn-theme-dark" class="theme-btn" title="Dark Map">Dark</button>
+                <button id="btn-theme-satellite" class="theme-btn" title="Satellite Map">Satellite</button>
             </div>
 
             <!-- Toast Warning Banner -->
@@ -256,9 +263,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Application modules -->
-    <script src="airports.js?v=4.0"></script>
-    <script src="airlines.js?v=4.0"></script>
-    <script src="simulator.js?v=4.0"></script>
-    <script src="app.js?v=4.0"></script>
+    <script src="airports.js?v=4.1"></script>
+    <script src="airlines.js?v=4.1"></script>
+    <script src="simulator.js?v=4.1"></script>
+    <script src="app.js?v=4.1"></script>
 </body>
 </html>
