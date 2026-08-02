@@ -4,8 +4,18 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Clean up any update query parameters to keep the URL pristine
+    if (window.location.search && (window.location.search.includes('?u=') || window.location.search.includes('&u='))) {
+        try {
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+        } catch (e) {
+            // ignore
+        }
+    }
+
     // PWA Cache Update Detector
-    const APP_VERSION = '7.0';
+    const APP_VERSION = '7.1';
     
     function checkForUpdates() {
         fetch('index.html?t=' + Date.now())
@@ -39,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.body.appendChild(toast);
                     
                     setTimeout(() => {
-                        window.location.reload(true);
+                        window.location.replace(window.location.pathname + '?u=' + Date.now());
                     }, 1500);
                 }
             })
