@@ -1705,3 +1705,30 @@ body.mobile-optimized .plane-icon-div svg {
     border-color: var(--cyan);
     color: var(--text-primary);
 }
+
+/* Plane climbing/descending directional trend badges */
+.plane-trend {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    font-size: 8px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.plane-trend.climb {
+    background: #10b981; /* Emerald green for climb */
+}
+
+.plane-trend.descend {
+    background: #f43f5e; /* Rose red for descent */
+}

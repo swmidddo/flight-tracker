@@ -242,19 +242,29 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAirportMarkersVisibility();
 
     // 5. Plane Marker Icon Factory
-    function createPlaneIcon(heading, color, isSelected, isScheduled) {
+    function createPlaneIcon(heading, color, isSelected, isScheduled, status) {
         const size = isSelected ? 32 : 22;
         const glowSize = isSelected ? '12px' : '4px';
         const pulseClass = isSelected ? 'plane-pulse' : '';
         const opacity = isScheduled ? 0.6 : 1.0;
+        
+        let trendBadge = '';
+        if (status === 'Climbing') {
+            trendBadge = `<div class="plane-trend climb" title="Climbing">▲</div>`;
+        } else if (status === 'Descending') {
+            trendBadge = `<div class="plane-trend descend" title="Descending">▼</div>`;
+        }
 
         return L.divIcon({
             className: `plane-icon-div ${pulseClass}`,
             html: `
-                <div style="width: ${size}px; height: ${size}px; transform: rotate(${heading}deg); transition: transform 0.25s linear; opacity: ${opacity};">
-                    <svg viewBox="0 0 24 24" width="100%" height="100%" fill="${color}" style="filter: drop-shadow(0 0 ${glowSize} ${color}); display: block;">
-                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                    </svg>
+                <div style="position: relative; width: ${size}px; height: ${size}px; opacity: ${opacity};">
+                    <div style="width: 100%; height: 100%; transform: rotate(${heading}deg); transition: transform 0.25s linear;">
+                        <svg viewBox="0 0 24 24" width="100%" height="100%" fill="${color}" style="filter: drop-shadow(0 0 ${glowSize} ${color}); display: block;">
+                            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                        </svg>
+                    </div>
+                    ${trendBadge}
                 </div>
             `,
             iconSize: [size, size],
@@ -399,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!planeMarkers[flight.id]) {
                 const marker = L.marker(latlng, {
-                    icon: createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected, isScheduled),
+                    icon: createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected, isScheduled, flight.status),
                     zIndexOffset: isSelected ? 2000 : 500
                 }).addTo(map);
 
@@ -416,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 marker._lastColor = flight.airlineColor;
                 marker._lastSelected = isSelected;
                 marker._lastScheduled = isScheduled;
+                marker._lastStatus = flight.status;
 
                 planeMarkers[flight.id] = marker;
             } else {
@@ -429,13 +440,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (marker._lastHeading !== flight.currentHeading || 
                     marker._lastColor !== flight.airlineColor || 
                     marker._lastSelected !== isSelected ||
-                    marker._lastScheduled !== isScheduled) {
+                    marker._lastScheduled !== isScheduled ||
+                    marker._lastStatus !== flight.status) {
                     
-                    marker.setIcon(createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected, isScheduled));
+                    marker.setIcon(createPlaneIcon(flight.currentHeading, flight.airlineColor, isSelected, isScheduled, flight.status));
                     marker._lastHeading = flight.currentHeading;
                     marker._lastColor = flight.airlineColor;
                     marker._lastSelected = isSelected;
                     marker._lastScheduled = isScheduled;
+                    marker._lastStatus = flight.status;
                 }
                 marker.setZIndexOffset(isSelected ? 2000 : 500);
             }
