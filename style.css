@@ -102,6 +102,7 @@ html, body {
 }
 
 body {
+    position: relative;
     font-family: var(--font-sans);
     background-color: var(--bg-darkest) !important;
     color: var(--text-primary);
@@ -335,9 +336,9 @@ h1 {
 .app-body {
     position: absolute;
     top: 0;
-    bottom: 0;
     left: 0;
-    right: 0;
+    width: 100% !important;
+    height: 100% !important;
     overflow: hidden;
     display: flex;
     background-color: var(--bg-darkest) !important;
@@ -346,9 +347,9 @@ h1 {
 .map-viewport {
     position: absolute;
     top: 0;
-    bottom: 0;
     left: 0;
-    right: 0;
+    width: 100% !important;
+    height: 100% !important;
     overflow: hidden;
     background-color: var(--bg-darkest) !important;
 }
@@ -356,9 +357,9 @@ h1 {
 #map {
     position: absolute;
     top: 0;
-    bottom: 0;
     left: 0;
-    right: 0;
+    width: 100% !important;
+    height: 100% !important;
     background-color: var(--bg-darkest) !important;
 }
 
