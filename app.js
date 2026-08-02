@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // PWA Cache Update Detector
-    const APP_VERSION = '6.9';
+    const APP_VERSION = '7.0';
     
     function checkForUpdates() {
         fetch('index.html?t=' + Date.now())
@@ -102,6 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomControl: false,
         attributionControl: false
     });
+
+    // Setup a ResizeObserver on the map element to dynamically adapt Leaflet canvas on layout shifts (e.g. reloads)
+    const mapElement = document.getElementById('map');
+    if (mapElement && typeof ResizeObserver !== 'undefined') {
+        const observer = new ResizeObserver(() => {
+            map.invalidateSize();
+        });
+        observer.observe(mapElement);
+    }
 
     // Force Leaflet to adapt to mobile system bar transitions at startup
     setTimeout(() => map.invalidateSize(), 150);
