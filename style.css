@@ -84,11 +84,14 @@ body.light-mode {
     box-sizing: border-box;
 }
 
+html {
+    background-color: var(--bg-darkest) !important;
+}
+
 html, body {
-    height: 100vh;
-    height: 100dvh;
-    width: 100vw;
-    width: 100dvw;
+    height: 100%;
+    height: -webkit-fill-available;
+    width: 100%;
     overflow: hidden;
     margin: 0;
     padding: 0;
@@ -1423,23 +1426,23 @@ body.mobile-optimized .plane-icon-div svg {
 
     /* Pushes layout elements down to respect safe area insets (notches, dynamic islands) on mobile */
     .map-overlay-stats {
-        top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+        top: calc(env(safe-area-inset-top, 0px) + 48px) !important;
         left: calc(env(safe-area-inset-left, 0px) + 16px) !important;
     }
 
     .map-theme-control {
-        top: calc(env(safe-area-inset-top, 0px) + 96px) !important;
+        top: calc(env(safe-area-inset-top, 0px) + 128px) !important;
         left: calc(env(safe-area-inset-left, 0px) + 16px) !important;
     }
 
     .leaflet-top.leaflet-right {
-        top: calc(env(safe-area-inset-top, 0px) + 144px) !important;
+        top: calc(env(safe-area-inset-top, 0px) + 176px) !important;
         left: calc(env(safe-area-inset-left, 0px) + 16px) !important;
         right: auto !important;
     }
 
     .sidebar-header-panel {
-        padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+        padding-top: calc(env(safe-area-inset-top, 0px) + 48px) !important;
     }
 }
 
