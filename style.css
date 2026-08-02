@@ -1796,3 +1796,23 @@ body.mobile-optimized .plane-icon-div svg {
 .plane-trend.descend {
     background: #f43f5e; /* Rose red for descent */
 }
+
+/* Sidebar Footer & Version info styles */
+.sidebar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-glass);
+    background: var(--bg-tint-subtle);
+}
+
+.sidebar-footer .version-label {
+    font-family: monospace;
+    background: var(--bg-tint-heavy);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+}
