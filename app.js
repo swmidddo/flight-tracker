@@ -2081,6 +2081,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isOpen = sidebar.classList.toggle('sidebar-open');
             sidebarToggleBtn.classList.toggle('sidebar-open');
             sidebarToggleBtn.innerHTML = isOpen ? '✕' : '📋';
+            setTimeout(() => map.invalidateSize(), 350);
         });
 
         // Close sidebar when clicking outside on mobile
@@ -2090,10 +2091,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     sidebar.classList.remove('sidebar-open');
                     sidebarToggleBtn.classList.remove('sidebar-open');
                     sidebarToggleBtn.innerHTML = '📋';
+                    setTimeout(() => map.invalidateSize(), 350);
                 }
             }
         });
     }
+
+    // Window resize observer to prevent map layout gaps
+    window.addEventListener('resize', () => {
+        map.invalidateSize();
+    });
 
     // 17. Load and Apply Persisted Preferences
     if (searchInput) {
