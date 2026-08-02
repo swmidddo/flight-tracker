@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // PWA Cache Update Detector
-    const APP_VERSION = '6.3';
+    const APP_VERSION = '6.4';
     
     function checkForUpdates() {
         fetch('index.html?t=' + Date.now())
@@ -89,6 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('light-mode');
         const themeBtn = document.getElementById('btn-theme-toggle');
         if (themeBtn) themeBtn.textContent = '☀️';
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', '#f1f5f9');
+        }
     }
 
     // 2. Map Initialization
@@ -1629,6 +1633,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLight = document.body.classList.toggle('light-mode');
         themeBtn.textContent = isLight ? '☀️' : '🌙';
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        
+        // Update theme-color meta tag dynamically to color iOS system bars
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', isLight ? '#f1f5f9' : '#030508');
+        }
     });
 
     // 14. Live Radar Network requests
