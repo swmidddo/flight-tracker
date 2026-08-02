@@ -328,21 +328,30 @@ h1 {
 
 /* App body layout */
 .app-body {
-    flex: 1;
-    display: flex;
-    position: relative;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     overflow: hidden;
+    display: flex;
 }
 
 .map-viewport {
-    flex: 1;
-    height: 100%;
-    position: relative;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
 }
 
 #map {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background-color: #030508;
 }
 
@@ -1051,11 +1060,13 @@ body.mobile-optimized .plane-icon-div svg {
     
     /* Hardware-accelerated slide up transition */
     transform: translateY(calc(100% + 40px));
-    transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1);
+    visibility: hidden;
+    transition: transform 0.35s cubic-bezier(0.19, 1, 0.22, 1), visibility 0.35s;
 }
 
 .telemetry-drawer.active {
     transform: translateY(0);
+    visibility: visible;
 }
 
 .drawer-content {
