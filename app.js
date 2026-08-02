@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // PWA Cache Update Detector
-    const APP_VERSION = '7.2';
+    const APP_VERSION = '7.3';
     
     function checkForUpdates() {
         fetch('index.html?t=' + Date.now())
