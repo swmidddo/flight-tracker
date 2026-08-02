@@ -4,6 +4,51 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // PWA Cache Update Detector
+    const APP_VERSION = '6.3';
+    
+    function checkForUpdates() {
+        fetch('index.html?t=' + Date.now())
+            .then(response => {
+                if (!response.ok) return '';
+                return response.text();
+            })
+            .then(html => {
+                if (!html) return;
+                const match = html.match(/src="app\.js\?v=([0-9.]+)"/);
+                if (match && match[1] && match[1] !== APP_VERSION) {
+                    console.log(`New version detected: ${match[1]}. Reloading...`);
+                    const toast = document.createElement('div');
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '24px';
+                    toast.style.left = '50%';
+                    toast.style.transform = 'translateX(-50%)';
+                    toast.style.background = 'linear-gradient(135deg, #0891b2, #7c3aed)';
+                    toast.style.color = '#ffffff';
+                    toast.style.padding = '12px 24px';
+                    toast.style.borderRadius = '30px';
+                    toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+                    toast.style.zIndex = '9999';
+                    toast.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+                    toast.style.fontWeight = '600';
+                    toast.style.display = 'flex';
+                    toast.style.alignItems = 'center';
+                    toast.style.gap = '10px';
+                    toast.style.fontSize = '0.9rem';
+                    toast.innerHTML = '<span style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow:0 0 8px #10b981;"></span><span>Updating Flight Tracker...</span>';
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        window.location.reload(true);
+                    }, 1500);
+                }
+            })
+            .catch(err => console.warn('Update check failed:', err));
+    }
+    
+    setTimeout(checkForUpdates, 2000);
+    setInterval(checkForUpdates, 30000);
+
     // Safe Storage helper to avoid security exceptions (e.g. Incognito/corporate policy)
     const safeStorage = {
         getItem(key, fallback = null) {
