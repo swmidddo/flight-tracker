@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // PWA Cache Update Detector
-    const APP_VERSION = '6.5';
+    const APP_VERSION = '6.6';
     
     function checkForUpdates() {
         fetch('index.html?t=' + Date.now())
@@ -102,6 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
         zoomControl: false,
         attributionControl: false
     });
+
+    // Force Leaflet to adapt to mobile system bar transitions at startup
+    setTimeout(() => map.invalidateSize(), 150);
+    setTimeout(() => map.invalidateSize(), 500);
+    setTimeout(() => map.invalidateSize(), 1500);
 
     // Top right zoom controls
     L.control.zoom({ position: 'topright' }).addTo(map);
