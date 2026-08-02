@@ -1403,6 +1403,26 @@ body.mobile-optimized .plane-icon-div svg {
     .dashboard-sidebar.sidebar-open {
         transform: translateX(0);
     }
+
+    /* Pushes layout elements down to respect safe area insets (notches, dynamic islands) on mobile */
+    .map-overlay-stats {
+        top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+        left: calc(env(safe-area-inset-left, 0px) + 16px) !important;
+    }
+
+    .map-theme-control {
+        top: calc(env(safe-area-inset-top, 0px) + 96px) !important;
+        left: calc(env(safe-area-inset-left, 0px) + 16px) !important;
+    }
+
+    .leaflet-top.leaflet-right {
+        top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+        right: calc(env(safe-area-inset-right, 0px) + 16px) !important;
+    }
+
+    .sidebar-header-panel {
+        padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+    }
 }
 
 /* Header & layout optimizations for small screens */
