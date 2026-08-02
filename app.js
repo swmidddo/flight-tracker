@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // PWA Cache Update Detector
-    const APP_VERSION = '7.1';
+    const APP_VERSION = '7.2';
     
     function checkForUpdates() {
         fetch('index.html?t=' + Date.now())
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(html => {
                 if (!html) return;
                 const match = html.match(/src="app\.js\?v=([0-9.]+)"/);
-                if (match && match[1] && match[1] !== APP_VERSION) {
+                if (match && match[1] && parseFloat(match[1]) > parseFloat(APP_VERSION)) {
                     console.log(`New version detected: ${match[1]}. Reloading...`);
                     const toast = document.createElement('div');
                     toast.style.position = 'fixed';
